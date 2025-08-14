@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using DataProtectionKeyEntity = Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey;
+using AstraID.Infrastructure.Messaging;
 
 namespace AstraID.Persistence;
 
@@ -24,6 +25,7 @@ public class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>, IData
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
     public DbSet<DataProtectionKeyEntity> DataProtectionKeys => Set<DataProtectionKeyEntity>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

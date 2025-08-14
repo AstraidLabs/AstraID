@@ -6,6 +6,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\AstraID.Infrastructure\Messaging\OutboxMessage.cs" Link="Messaging/OutboxMessage.cs" />
+    <Compile Include="..\AstraID.Infrastructure\Messaging\OutboxDbConfig.cs" Link="Messaging/OutboxDbConfig.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
