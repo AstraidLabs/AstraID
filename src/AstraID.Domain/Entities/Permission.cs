@@ -1,15 +1,22 @@
 using AstraID.Domain.Primitives;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace AstraID.Domain.Entities;
 
 /// <summary>
 /// Represents an application permission.
 /// </summary>
+[Table("Permissions", Schema = "auth")]
+[Index(nameof(Name), IsUnique = true)]
 public sealed class Permission : Entity<int>
 {
     /// <summary>
     /// Permission name (unique).
     /// </summary>
+    [Required]
+    [MaxLength(128)]
     public string Name { get; private set; } = string.Empty;
 
     /// <summary>

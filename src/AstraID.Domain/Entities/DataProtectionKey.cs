@@ -1,15 +1,19 @@
 using AstraID.Domain.Primitives;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AstraID.Domain.Entities;
 
 /// <summary>
 /// Represents a persisted ASP.NET Core data protection key.
 /// </summary>
+[Table("DataProtectionKeys", Schema = "auth")]
 public sealed class DataProtectionKey : Entity<int>
 {
     /// <summary>
     /// Friendly display name for the key.
     /// </summary>
+    [MaxLength(200)]
     public string FriendlyName { get; private set; } = string.Empty;
 
     /// <summary>

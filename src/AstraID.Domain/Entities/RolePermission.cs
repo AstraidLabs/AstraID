@@ -1,10 +1,12 @@
 using AstraID.Domain.Primitives;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AstraID.Domain.Entities;
 
 /// <summary>
 /// Join entity between roles and permissions.
 /// </summary>
+[Table("RolePermissions", Schema = "auth")]
 public sealed class RolePermission : Entity<Guid>
 {
     /// <summary>

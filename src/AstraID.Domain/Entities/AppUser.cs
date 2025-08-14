@@ -2,9 +2,15 @@ using AstraID.Domain.Events;
 using AstraID.Domain.Primitives;
 using AstraID.Domain.ValueObjects;
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace AstraID.Domain.Entities;
 
+[Table("Users", Schema = "auth")]
+[Index(nameof(NormalizedEmail))]
+[Index(nameof(IsActive))]
 /// <summary>
 /// Application user aggregate root.
 /// </summary>
@@ -20,6 +26,7 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
     /// <summary>
     /// Raw display name value.
     /// </summary>
+    [MaxLength(128)]
     public string? DisplayNameRaw { get; private set; }
 
     /// <summary>
@@ -41,6 +48,9 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
     /// Optional tenant identifier for multi-tenancy.
     /// </summary>
     public Guid? TenantId { get; private set; }
+
+    [ConcurrencyCheck]
+    public override string? ConcurrencyStamp { get; set; }
 
     private AppUser()
     {
