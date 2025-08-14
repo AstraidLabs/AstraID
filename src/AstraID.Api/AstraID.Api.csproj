@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AstraID.Infrastructure\AstraID.Infrastructure.csproj" />
+    <ProjectReference Include="..\AstraID.Persistence\AstraID.Persistence.csproj" />
+    <ProjectReference Include="..\AstraID.Domain\AstraID.Domain.csproj" />
+    <ProjectReference Include="..\AstraID.Shared\AstraID.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
