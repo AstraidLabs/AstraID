@@ -1,13 +1,14 @@
+using System.Reflection;
 using AstraID.Domain.Entities;
-using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using DataProtectionKeyEntity = Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey;
 using AstraID.Persistence.Messaging;
+using AstraID.Persistence.Internal;
+using DataProtectionKey = AstraID.Domain.Entities.DataProtectionKey;
 
 namespace AstraID.Persistence;
 
-public class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>, IDataProtectionKeyContext
+public sealed class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>
 {
     public AstraIdDbContext(DbContextOptions<AstraIdDbContext> options) : base(options)
     {
@@ -23,7 +24,7 @@ public class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>, IData
     public DbSet<ClientSecretHistory> ClientSecretHistory => Set<ClientSecretHistory>();
     public DbSet<ClientCorsOrigin> ClientCorsOrigins => Set<ClientCorsOrigin>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
-    public DbSet<DataProtectionKeyEntity> DataProtectionKeys => Set<DataProtectionKeyEntity>();
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -31,7 +32,8 @@ public class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>, IData
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("auth");
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AstraIdDbContext).Assembly);
         modelBuilder.UseOpenIddict();
+        ModelBuilderConventions.Apply(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }
 }
