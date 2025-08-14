@@ -8,7 +8,7 @@ public static class UserSpecs
 {
     /// <summary>Filters by normalized email.</summary>
     public static Expression<Func<AppUser, bool>> ByEmail(string normalizedEmail)
-        => u => u.NormalizedEmail == normalizedEmail;
+        => u => u.NormalizedEmail == normalizedEmail.ToUpperInvariant();
 
     /// <summary>Filters active users.</summary>
     public static Expression<Func<AppUser, bool>> ActiveOnly()

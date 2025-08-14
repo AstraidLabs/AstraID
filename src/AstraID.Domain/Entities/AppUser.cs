@@ -60,9 +60,9 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
     {
         Id = Guid.NewGuid();
         UserName = email.Value;
-        NormalizedUserName = email.Value;
+        NormalizedUserName = email.Value.ToUpperInvariant();
         Email = email.Value;
-        NormalizedEmail = email.Value;
+        NormalizedEmail = email.Value.ToUpperInvariant();
         EmailConfirmed = false;
         DisplayNameRaw = displayName.Value;
         TenantId = tenantId;
@@ -96,8 +96,8 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
 
         Email = newEmail.Value;
         UserName = newEmail.Value;
-        NormalizedEmail = newEmail.Value;
-        NormalizedUserName = newEmail.Value;
+        NormalizedEmail = newEmail.Value.ToUpperInvariant();
+        NormalizedUserName = newEmail.Value.ToUpperInvariant();
         EmailConfirmed = false;
         Touch();
     }

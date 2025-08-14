@@ -18,10 +18,10 @@ public class AppUserRepository : IAppUserRepository
         _db.Users.FindAsync(new object?[] { id }, ct).AsTask();
 
     public Task<AppUser?> GetByEmailAsync(string normalizedEmail, CancellationToken ct = default) =>
-        _db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, ct);
+        _db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail.ToUpperInvariant(), ct);
 
     public Task<bool> ExistsByEmailAsync(string normalizedEmail, CancellationToken ct = default) =>
-        _db.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail, ct);
+        _db.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail.ToUpperInvariant(), ct);
 
     public Task AddAsync(AppUser user, CancellationToken ct = default) =>
         _db.Users.AddAsync(user, ct).AsTask();

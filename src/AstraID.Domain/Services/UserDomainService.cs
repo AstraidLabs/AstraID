@@ -50,7 +50,7 @@ public sealed class UserDomainService
     /// <summary>Registers a new user.</summary>
     public async Task<Result<AppUser>> RegisterAsync(Email email, DisplayName displayName, string passwordPlain, Guid? tenantId, CancellationToken ct)
     {
-        if (await _users.ExistsByEmailAsync(email.Value, ct))
+        if (await _users.ExistsByEmailAsync(email.Value.ToUpperInvariant(), ct))
             return Result<AppUser>.Failure(DomainError.From(DomainErrorCodes.EmailAlreadyExists, "Email already exists."));
 
         var strengthError = _passwordPolicy.ValidateStrength(passwordPlain);
@@ -75,7 +75,7 @@ public sealed class UserDomainService
             return Result.Failure(DomainError.From("user.notFound", "User not found."));
         if (!user.IsActive)
             return Result.Failure(DomainError.From("user.inactive", "User is inactive."));
-        if (await _users.ExistsByEmailAsync(newEmail.Value, ct))
+        if (await _users.ExistsByEmailAsync(newEmail.Value.ToUpperInvariant(), ct))
             return Result.Failure(DomainError.From(DomainErrorCodes.EmailAlreadyExists, "Email already exists."));
 
         user.ChangeEmail(newEmail);
