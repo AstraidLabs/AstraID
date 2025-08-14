@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using DataProtectionKeyEntity = Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey;
-using AstraID.Infrastructure.Messaging;
+using AstraID.Persistence.Messaging;
 
 namespace AstraID.Persistence;
 

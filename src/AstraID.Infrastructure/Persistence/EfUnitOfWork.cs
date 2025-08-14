@@ -13,5 +13,6 @@ public class EfUnitOfWork : IUnitOfWork
 
     public EfUnitOfWork(AstraIdDbContext db) => _db = db;
 
-    public Task<int> SaveChangesAsync(CancellationToken ct = default) => _db.SaveChangesAsync(ct);
+    public async Task<int> SaveChangesAsync(CancellationToken ct = default)
+        => await _db.SaveChangesAsync(ct).ConfigureAwait(false);
 }

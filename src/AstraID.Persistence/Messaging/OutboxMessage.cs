@@ -1,6 +1,6 @@
 using AstraID.Domain.Abstractions;
 
-namespace AstraID.Infrastructure.Messaging;
+namespace AstraID.Persistence.Messaging;
 
 /// <summary>
 /// Outbox message stored for later processing.
@@ -13,4 +13,5 @@ public class OutboxMessage : IOutboxMessage
     public string PayloadJson { get; set; } = string.Empty;
     public string? CorrelationId { get; set; }
     public DateTime? ProcessedUtc { get; set; }
+    public int Attempts { get; set; }
 }

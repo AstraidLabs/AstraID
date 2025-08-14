@@ -17,10 +17,11 @@ public class PasswordHistoryRepository : IPasswordHistoryRepository
     public async Task<IReadOnlyList<string>> GetRecentHashesAsync(Guid userId, int take, CancellationToken ct = default) =>
         await _db.PasswordHistory
             .Where(p => p.UserId == userId)
-            .OrderByDescending(p => p.CreatedUtc)
+            .OrderByDescending(p => p.ChangedUtc)
             .Select(p => p.PasswordHash)
             .Take(take)
-            .ToListAsync(ct);
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
 
     public Task AddAsync(PasswordHistory history, CancellationToken ct = default) =>
         _db.PasswordHistory.AddAsync(history, ct).AsTask();

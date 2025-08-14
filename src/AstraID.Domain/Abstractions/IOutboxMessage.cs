@@ -8,4 +8,6 @@ public interface IOutboxMessage
     string Type { get; }
     string PayloadJson { get; }
     string? CorrelationId { get; }
+    DateTime? ProcessedUtc { get; }
+    int Attempts { get; }
 }

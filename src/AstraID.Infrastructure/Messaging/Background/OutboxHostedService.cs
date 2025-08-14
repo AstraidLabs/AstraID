@@ -1,42 +1,33 @@
-using AstraID.Persistence;
-using Microsoft.EntityFrameworkCore;
+using AstraID.Domain.Abstractions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace AstraID.Infrastructure.Messaging.Background;
 
 /// <summary>
-/// Background service that publishes messages from the outbox.
+/// Periodically publishes pending outbox messages.
 /// </summary>
-public class OutboxHostedService : BackgroundService
+public sealed class OutboxHostedService : BackgroundService
 {
     private readonly IServiceProvider _provider;
-    private readonly TimeSpan _interval = TimeSpan.FromSeconds(30);
+    private readonly TimeSpan _interval;
 
-    public OutboxHostedService(IServiceProvider provider) => _provider = provider;
+    public OutboxHostedService(IServiceProvider provider, IConfiguration configuration)
+    {
+        _provider = provider;
+        var seconds = int.TryParse(configuration["ASTRAID_OUTBOX__POLL_INTERVAL_SECONDS"], out var s) ? s : 5;
+        _interval = TimeSpan.FromSeconds(seconds);
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
             using var scope = _provider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AstraIdDbContext>();
-
-            var messages = await db.OutboxMessages
-                .Where(m => m.ProcessedUtc == null)
-                .OrderBy(m => m.CreatedUtc)
-                .Take(20)
-                .ToListAsync(stoppingToken);
-
-            foreach (var message in messages)
-            {
-                // For now, simply mark as processed
-                message.ProcessedUtc = DateTime.UtcNow;
-                // No deserialization to domain event types here, kept simple
-            }
-
-            await db.SaveChangesAsync(stoppingToken);
-            await Task.Delay(_interval, stoppingToken);
+            var publisher = scope.ServiceProvider.GetRequiredService<IOutboxPublisher>();
+            await publisher.PublishPendingAsync(stoppingToken).ConfigureAwait(false);
+            await Task.Delay(_interval, stoppingToken).ConfigureAwait(false);
         }
     }
 }
