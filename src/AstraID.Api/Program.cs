@@ -1,5 +1,6 @@
 using AstraID.Infrastructure.Extensions;
 using AstraID.Persistence;
+using AstraID.Persistence.Extensions;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);

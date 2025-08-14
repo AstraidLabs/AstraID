@@ -2,6 +2,7 @@ using AstraID.Domain.Entities;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using DataProtectionKeyEntity = Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey;
 
 namespace AstraID.Persistence;
 
@@ -21,7 +22,7 @@ public class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>, IData
     public DbSet<ClientSecretHistory> ClientSecretHistory => Set<ClientSecretHistory>();
     public DbSet<ClientCorsOrigin> ClientCorsOrigins => Set<ClientCorsOrigin>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
-    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    public DbSet<DataProtectionKeyEntity> DataProtectionKeys => Set<DataProtectionKeyEntity>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
