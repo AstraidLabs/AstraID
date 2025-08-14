@@ -4,6 +4,8 @@ using AstraID.Domain.Primitives;
 using AstraID.Persistence.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace AstraID.Infrastructure.Messaging;
 
@@ -15,15 +17,24 @@ public sealed class OutboxPublisher : IOutboxPublisher
     private readonly DbContext _db;
     private readonly IDomainEventDispatcher _dispatcher;
     private readonly ILogger<OutboxPublisher> _logger;
+    private readonly IOutboxUnknownMessageHandler? _unknownHandler;
+
+    private static readonly IReadOnlyDictionary<string, Type> _eventTypes =
+        typeof(IDomainEvent).Assembly
+            .GetTypes()
+            .Where(t => typeof(IDomainEvent).IsAssignableFrom(t) && !t.IsAbstract)
+            .ToDictionary(t => t.AssemblyQualifiedName!, t => t);
 
     public OutboxPublisher(
         DbContext db,
         IDomainEventDispatcher dispatcher,
-        ILogger<OutboxPublisher> logger)
+        ILogger<OutboxPublisher> logger,
+        IOutboxUnknownMessageHandler? unknownHandler = null)
     {
         _db = db;
         _dispatcher = dispatcher;
         _logger = logger;
+        _unknownHandler = unknownHandler;
     }
 
     /// <inheritdoc />
@@ -40,10 +51,11 @@ public sealed class OutboxPublisher : IOutboxPublisher
         {
             try
             {
-                var type = Type.GetType(message.Type);
-                if (type == null || !typeof(IDomainEvent).IsAssignableFrom(type))
+                if (!_eventTypes.TryGetValue(message.Type, out var type))
                 {
                     _logger.LogWarning("Unknown domain event type {Type}", message.Type);
+                    if (_unknownHandler is not null)
+                        await _unknownHandler.HandleAsync(message, ct).ConfigureAwait(false);
                     message.ProcessedUtc = DateTime.UtcNow;
                     continue;
                 }
@@ -55,6 +67,9 @@ public sealed class OutboxPublisher : IOutboxPublisher
 
                 if (domainEvent is null)
                 {
+                    _logger.LogWarning("Failed to deserialize domain event {Type}", message.Type);
+                    if (_unknownHandler is not null)
+                        await _unknownHandler.HandleAsync(message, ct).ConfigureAwait(false);
                     message.ProcessedUtc = DateTime.UtcNow;
                     continue;
                 }
@@ -71,4 +86,9 @@ public sealed class OutboxPublisher : IOutboxPublisher
 
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
     }
+}
+
+public interface IOutboxUnknownMessageHandler
+{
+    Task HandleAsync(OutboxMessage message, CancellationToken ct = default);
 }
