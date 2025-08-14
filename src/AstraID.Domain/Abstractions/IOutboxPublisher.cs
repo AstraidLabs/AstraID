@@ -1,8 +1,12 @@
 namespace AstraID.Domain.Abstractions;
 
-/// <summary>Enqueues outbox messages for later publishing.</summary>
+/// <summary>
+/// Publishes pending outbox messages.
+/// </summary>
 public interface IOutboxPublisher
 {
-    /// <summary>Enqueue domain/integration event to outbox.</summary>
-    Task EnqueueAsync(IOutboxMessage message, CancellationToken ct = default);
+    /// <summary>
+    /// Processes and dispatches pending outbox messages.
+    /// </summary>
+    Task PublishPendingAsync(CancellationToken ct = default);
 }

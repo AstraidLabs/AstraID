@@ -1,13 +1,13 @@
 using AstraID.Infrastructure.Extensions;
+using AstraID.Infrastructure.DependencyInjection;
 using AstraID.Persistence;
-using AstraID.Persistence.Extensions;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
 
-builder.Services.AddPersistence(builder.Configuration)
+builder.Services.AddAstraIdPersistence(builder.Configuration)
                 .AddIdentityAndAuth(builder.Configuration)
                 .AddOpenIddictServer(builder.Configuration)
                 .AddTelemetry(builder.Configuration)

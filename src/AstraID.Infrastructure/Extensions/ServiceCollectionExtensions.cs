@@ -66,7 +66,8 @@ public static class ServiceCollectionExtensions
             .AddCore(opt => opt.UseEntityFrameworkCore().UseDbContext<AstraIdDbContext>())
             .AddServer(opt =>
             {
-                opt.SetIssuer(configuration["ASTRAID_ISSUER"]);
+                var issuer = configuration["ASTRAID_ISSUER"] ?? throw new InvalidOperationException("Issuer not configured");
+                opt.SetIssuer(issuer);
                 opt.AllowAuthorizationCodeFlow()
                     .AllowClientCredentialsFlow()
                     .AllowRefreshTokenFlow();

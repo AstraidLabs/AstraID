@@ -1,8 +1,7 @@
 using System.Text.Json;
 using System.Linq;
 using AstraID.Domain.Primitives;
-using AstraID.Infrastructure.Messaging;
-using AstraID.Persistence;
+using AstraID.Persistence.Messaging;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,7 +17,7 @@ public sealed class DomainEventsCollectorInterceptor : SaveChangesInterceptor
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        if (eventData.Context is not AstraIdDbContext db)
+        if (eventData.Context is not DbContext db)
             return base.SavingChangesAsync(eventData, result, cancellationToken);
 
         var aggregates = db.ChangeTracker.Entries<AggregateRoot<Guid>>()
@@ -32,11 +31,13 @@ public sealed class DomainEventsCollectorInterceptor : SaveChangesInterceptor
                 var message = new OutboxMessage
                 {
                     Id = Guid.NewGuid(),
-                    Type = domainEvent.GetType().FullName ?? string.Empty,
-                    PayloadJson = JsonSerializer.Serialize(domainEvent, domainEvent.GetType()),
-                    CreatedUtc = DateTime.UtcNow
+                    Type = domainEvent.GetType().AssemblyQualifiedName ?? string.Empty,
+                    PayloadJson = JsonSerializer.Serialize(domainEvent, domainEvent.GetType(),
+                        new JsonSerializerOptions(JsonSerializerDefaults.Web)),
+                    CreatedUtc = DateTime.UtcNow,
+                    Attempts = 0
                 };
-                db.OutboxMessages.Add(message);
+                db.Set<OutboxMessage>().Add(message);
             }
             entry.Entity.ClearDomainEvents();
         }

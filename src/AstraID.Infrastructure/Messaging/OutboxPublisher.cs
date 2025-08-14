@@ -1,20 +1,74 @@
+using System.Text.Json;
 using AstraID.Domain.Abstractions;
-using AstraID.Persistence;
+using AstraID.Domain.Primitives;
+using AstraID.Persistence.Messaging;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AstraID.Infrastructure.Messaging;
 
 /// <summary>
-/// Persists outbox messages in the database.
+/// Publishes pending outbox messages by dispatching their domain events.
 /// </summary>
-public class OutboxPublisher : IOutboxPublisher
+public sealed class OutboxPublisher : IOutboxPublisher
 {
-    private readonly AstraIdDbContext _db;
+    private readonly DbContext _db;
+    private readonly IDomainEventDispatcher _dispatcher;
+    private readonly ILogger<OutboxPublisher> _logger;
 
-    public OutboxPublisher(AstraIdDbContext db) => _db = db;
-
-    public Task EnqueueAsync(IOutboxMessage message, CancellationToken ct = default)
+    public OutboxPublisher(
+        DbContext db,
+        IDomainEventDispatcher dispatcher,
+        ILogger<OutboxPublisher> logger)
     {
-        _db.OutboxMessages.Add((OutboxMessage)message);
-        return Task.CompletedTask;
+        _db = db;
+        _dispatcher = dispatcher;
+        _logger = logger;
+    }
+
+    /// <inheritdoc />
+    public async Task PublishPendingAsync(CancellationToken ct = default)
+    {
+        var messages = await _db.Set<OutboxMessage>()
+            .Where(m => m.ProcessedUtc == null)
+            .OrderBy(m => m.CreatedUtc)
+            .Take(100)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        foreach (var message in messages)
+        {
+            try
+            {
+                var type = Type.GetType(message.Type);
+                if (type == null || !typeof(IDomainEvent).IsAssignableFrom(type))
+                {
+                    _logger.LogWarning("Unknown domain event type {Type}", message.Type);
+                    message.ProcessedUtc = DateTime.UtcNow;
+                    continue;
+                }
+
+                var domainEvent = (IDomainEvent?)JsonSerializer.Deserialize(
+                    message.PayloadJson,
+                    type,
+                    new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+                if (domainEvent is null)
+                {
+                    message.ProcessedUtc = DateTime.UtcNow;
+                    continue;
+                }
+
+                await _dispatcher.DispatchAsync(new[] { domainEvent }, ct).ConfigureAwait(false);
+                message.ProcessedUtc = DateTime.UtcNow;
+            }
+            catch (Exception ex)
+            {
+                message.Attempts++;
+                _logger.LogError(ex, "Error processing outbox message {MessageId}", message.Id);
+            }
+        }
+
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 }

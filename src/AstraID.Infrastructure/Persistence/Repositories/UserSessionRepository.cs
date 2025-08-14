@@ -15,7 +15,9 @@ public class UserSessionRepository : IUserSessionRepository
     public UserSessionRepository(AstraIdDbContext db) => _db = db;
 
     public Task<UserSession?> GetActiveByDeviceAsync(Guid userId, string deviceId, CancellationToken ct = default) =>
-        _db.UserSessions.FirstOrDefaultAsync(s => s.UserId == userId && s.DeviceId == deviceId && s.RevokedUtc == null, ct);
+        _db.UserSessions.FirstOrDefaultAsync(
+            s => s.UserId == userId && s.DeviceId.Value == deviceId && s.RevokedUtc == null,
+            ct);
 
     public Task AddAsync(UserSession session, CancellationToken ct = default) =>
         _db.UserSessions.AddAsync(session, ct).AsTask();
@@ -23,5 +25,5 @@ public class UserSessionRepository : IUserSessionRepository
     public Task<int> RevokeAllAsync(Guid userId, string reason, DateTime utcNow, CancellationToken ct = default) =>
         _db.UserSessions.Where(s => s.UserId == userId && s.RevokedUtc == null)
             .ExecuteUpdateAsync(up => up.SetProperty(s => s.RevokedUtc, utcNow)
-                                        .SetProperty(s => s.RevocationReason, reason), ct);
+                                        .SetProperty(s => s.RevokeReason, reason), ct);
 }
