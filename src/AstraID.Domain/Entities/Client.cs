@@ -2,12 +2,17 @@ using System.Linq;
 using AstraID.Domain.Events;
 using AstraID.Domain.Primitives;
 using AstraID.Domain.ValueObjects;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace AstraID.Domain.Entities;
 
 /// <summary>
 /// Represents an OIDC/OAuth client application.
 /// </summary>
+[Table("Clients", Schema = "auth")]
+[Index(nameof(ClientId), IsUnique = true)]
 public sealed class Client : AggregateRoot<Guid>
 {
     private readonly HashSet<Scope> _scopes = new();
@@ -19,11 +24,13 @@ public sealed class Client : AggregateRoot<Guid>
     /// <summary>
     /// Client identifier string.
     /// </summary>
+    [Required, MaxLength(100)]
     public string ClientId { get; private set; } = string.Empty;
 
     /// <summary>
     /// Human friendly display name.
     /// </summary>
+    [MaxLength(200)]
     public string DisplayName { get; private set; } = string.Empty;
 
     /// <summary>
@@ -34,7 +41,8 @@ public sealed class Client : AggregateRoot<Guid>
     /// <summary>
     /// Current hashed secret if confidential.
     /// </summary>
-    public HashedSecret? ClientSecretHash { get; private set; }
+    [MaxLength(512)]
+    public string? ClientSecretHashRaw { get; private set; }
 
     /// <summary>
     /// Creation timestamp.
@@ -217,7 +225,7 @@ public sealed class Client : AggregateRoot<Guid>
 
         var history = ClientSecretHistory.Create(Id, newHash, true);
         _secretHistory.Add(history);
-        ClientSecretHash = newHash;
+        ClientSecretHashRaw = newHash.Value;
         Raise(new ClientSecretRotated(Id));
         Touch();
     }

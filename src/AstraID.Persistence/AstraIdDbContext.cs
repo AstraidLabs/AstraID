@@ -1,6 +1,5 @@
 using AstraID.Domain.Entities;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,19 +11,24 @@ public class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>, IData
     {
     }
 
+    public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<UserSession> UserSessions => Set<UserSession>();
+    public DbSet<UserConsent> UserConsents => Set<UserConsent>();
+    public DbSet<RecoveryCode> RecoveryCodes => Set<RecoveryCode>();
+    public DbSet<PasswordHistory> PasswordHistory => Set<PasswordHistory>();
+    public DbSet<Client> Clients => Set<Client>();
+    public DbSet<ClientSecretHistory> ClientSecretHistory => Set<ClientSecretHistory>();
+    public DbSet<ClientCorsOrigin> ClientCorsOrigins => Set<ClientCorsOrigin>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
-    public DbSet<ClientRegistration> ClientRegistrations => Set<ClientRegistration>();
-    public DbSet<Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey> DataProtectionKeys => Set<Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey>();
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    public DbSet<Tenant> Tenants => Set<Tenant>();
 
-    protected override void OnModelCreating(ModelBuilder builder)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(builder);
-        builder.UseOpenIddict();
-
-        builder.Entity<AuditEvent>(b =>
-        {
-            b.HasIndex(x => x.EventType);
-            b.HasIndex(x => x.CreatedUtc);
-        });
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.HasDefaultSchema("auth");
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AstraIdDbContext).Assembly);
+        modelBuilder.UseOpenIddict();
     }
 }

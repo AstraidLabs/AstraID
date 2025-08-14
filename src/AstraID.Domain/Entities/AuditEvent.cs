@@ -1,19 +1,25 @@
 using System.Text.Json;
 using AstraID.Domain.Events;
 using AstraID.Domain.Primitives;
-using AstraID.Domain.ValueObjects;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace AstraID.Domain.Entities;
 
 /// <summary>
 /// Represents an audit trail entry.
 /// </summary>
+[Table("AuditEvents", Schema = "auth")]
+[Index(nameof(EventType), nameof(CreatedUtc))]
+[Index(nameof(UserId), nameof(CreatedUtc))]
+[Index(nameof(ClientId), nameof(CreatedUtc))]
 public sealed class AuditEvent : AggregateRoot<Guid>
 {
     /// <summary>
     /// Creation timestamp.
     /// </summary>
-    public DateTime CreatedUtc { get; private set; }
+    public DateTime CreatedUtc { get; private set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Optional tenant identifier.
@@ -28,6 +34,7 @@ public sealed class AuditEvent : AggregateRoot<Guid>
     /// <summary>
     /// Client identifier if applicable.
     /// </summary>
+    [MaxLength(100)]
     public string? ClientId { get; private set; }
 
     /// <summary>
@@ -43,31 +50,37 @@ public sealed class AuditEvent : AggregateRoot<Guid>
     /// <summary>
     /// Optional failure reason.
     /// </summary>
+    [MaxLength(256)]
     public string? FailureReason { get; private set; }
 
     /// <summary>
     /// Correlation identifier.
     /// </summary>
-    public CorrelationId Correlation { get; private set; } = null!;
+    [MaxLength(64)]
+    public string? Correlation { get; private set; }
 
     /// <summary>
     /// IP address associated with the event.
     /// </summary>
-    public IpAddress? Ip { get; private set; }
+    [MaxLength(45)]
+    public string? Ip { get; private set; }
 
     /// <summary>
     /// User agent associated with the event.
     /// </summary>
-    public UserAgent? Agent { get; private set; }
+    [MaxLength(512)]
+    public string? Agent { get; private set; }
 
     /// <summary>
     /// Optional resource identifier.
     /// </summary>
+    [MaxLength(128)]
     public string? ResourceId { get; private set; }
 
     /// <summary>
     /// Severity level (Info/Warning/Error).
     /// </summary>
+    [MaxLength(16)]
     public string? Severity { get; private set; }
 
     private AuditEvent()
@@ -75,8 +88,8 @@ public sealed class AuditEvent : AggregateRoot<Guid>
     }
 
     private AuditEvent(Guid? tenantId, Guid? userId, string? clientId, AuditEventType type,
-        string? dataJson, string? failure, CorrelationId correlation, IpAddress? ip,
-        UserAgent? agent, string? resourceId, string? severity) : base(Guid.NewGuid())
+        string? dataJson, string? failure, string? correlation, string? ip,
+        string? agent, string? resourceId, string? severity) : base(Guid.NewGuid())
     {
         TenantId = tenantId;
         UserId = userId;
@@ -97,11 +110,11 @@ public sealed class AuditEvent : AggregateRoot<Guid>
     /// Creates a new <see cref="AuditEvent"/> instance.
     /// </summary>
     public static AuditEvent From(Guid? tenantId, Guid? userId, string? clientId, AuditEventType type,
-        object? data = null, string? failure = null, CorrelationId? corr = null,
-        IpAddress? ip = null, UserAgent? agent = null, string? resourceId = null, string? severity = "Info")
+        object? data = null, string? failure = null, string? correlation = null,
+        string? ip = null, string? agent = null, string? resourceId = null, string? severity = "Info")
     {
         string? dataJson = data is null ? null : JsonSerializer.Serialize(data);
-        var correlation = corr ?? CorrelationId.Create(Guid.NewGuid());
+        correlation ??= Guid.NewGuid().ToString("N");
         return new AuditEvent(tenantId, userId, clientId, type, dataJson, failure, correlation, ip, agent, resourceId, severity);
     }
 }
