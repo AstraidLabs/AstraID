@@ -1,5 +1,6 @@
 using AstraID.Infrastructure.Extensions;
 using AstraID.Infrastructure.DependencyInjection;
+using AstraID.Infrastructure.Startup;
 using AstraID.Persistence;
 using Serilog;
 
@@ -25,7 +26,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddApiVersioning();
 
+#if DEBUG
+builder.Configuration.AddUserSecrets<Program>(optional: true);
+#endif
+
 var app = builder.Build();
+
+// Apply optional auto-migrate & seed based on environment flags
+await app.UseAstraIdDatabaseAsync();
 
 app.UseSerilogRequestLogging();
 
