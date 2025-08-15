@@ -28,6 +28,7 @@
     <ProjectReference Include="..\AstraID.Persistence\AstraID.Persistence.csproj" />
     <ProjectReference Include="..\AstraID.Domain\AstraID.Domain.csproj" />
     <ProjectReference Include="..\AstraID.Shared\AstraID.Shared.csproj" />
+    <ProjectReference Include="..\AstraID.Application\AstraID.Application.csproj" />
   </ItemGroup>
 
 </Project>
