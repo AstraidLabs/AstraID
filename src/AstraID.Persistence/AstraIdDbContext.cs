@@ -1,3 +1,8 @@
+// EF Core DbContext integrating ASP.NET Identity and AstraID domain entities.
+// Key responsibilities: configure schema, expose DbSets, and integrate OpenIddict & outbox.
+// Why: central unit of work for persistence; keeps mapping logic in one place.
+// Gotchas: default schema set to 'auth', ensure migrations align.
+
 using System.Reflection;
 using AstraID.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -31,9 +36,9 @@ public sealed class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.HasDefaultSchema("auth");
-        modelBuilder.UseOpenIddict();
-        ModelBuilderConventions.Apply(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.HasDefaultSchema("auth"); // Cohesive schema for identity tables.
+        modelBuilder.UseOpenIddict(); // Registers OpenIddict entities.
+        ModelBuilderConventions.Apply(modelBuilder); // Apply shared value object conventions.
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly()); // Ensure deterministic mappings.
     }
 }
