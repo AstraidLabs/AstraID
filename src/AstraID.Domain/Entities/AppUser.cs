@@ -1,3 +1,14 @@
+// Aggregate root representing an application user within the DDD model.
+//
+// Key responsibilities:
+// - Encapsulate identity state and business rules (activation, lockout, MFA).
+// - Raise domain events for critical transitions (registration, password changes).
+// - Persist through EF Core with Identity base class integration.
+//
+// Why this exists: keeps user-related invariants close to data, reducing risk of
+// scattered security logic.
+// Gotchas: manipulating properties directly bypasses invariants; use methods.
+
 using AstraID.Domain.Events;
 using AstraID.Domain.Primitives;
 using AstraID.Domain.ValueObjects;
@@ -92,13 +103,13 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
     public void ChangeEmail(Email newEmail)
     {
         if (!IsActive)
-            throw new InvalidOperationException("Inactive users cannot change email.");
+            throw new InvalidOperationException("Inactive users cannot change email."); // Prevent privilege escalation.
 
         Email = newEmail.Value;
         UserName = newEmail.Value;
         NormalizedEmail = newEmail.Value.ToUpperInvariant();
         NormalizedUserName = newEmail.Value.ToUpperInvariant();
-        EmailConfirmed = false;
+        EmailConfirmed = false; // Force reconfirmation to mitigate account hijacking.
         Touch();
     }
 
@@ -117,7 +128,7 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
     public void RecordSuccessfulLogin(DateTime? whenUtc = null)
     {
         LastLoginUtc = whenUtc ?? DateTime.UtcNow;
-        AccessFailedCount = 0;
+        AccessFailedCount = 0; // Reset lockout counters on success.
         LockoutEnd = null;
         Touch();
     }
@@ -139,7 +150,7 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
         if (!TwoFactorEnabled)
         {
             TwoFactorEnabled = true;
-            Raise(new TwoFactorEnabled(Id));
+            Raise(new TwoFactorEnabled(Id)); // Downstream listener may generate codes.
             Touch();
         }
     }
@@ -159,12 +170,12 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
     public void Deactivate(string reason = "deactivated")
     {
         if (!IsActive)
-            return;
+            return; // Idempotent operation.
 
         IsActive = false;
         LockoutEnabled = true;
         LockoutEnd = DateTimeOffset.MaxValue;
-        Raise(new UserLocked(Id, reason));
+        Raise(new UserLocked(Id, reason)); // Audited for security investigations.
         Touch();
     }
 
@@ -176,7 +187,7 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
         IsActive = true;
         LockoutEnabled = false;
         LockoutEnd = null;
-        Touch();
+        Touch(); // Reset concurrency stamp to propagate state.
     }
 
     /// <summary>
@@ -184,7 +195,7 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
     /// </summary>
     public void ChangePassword()
     {
-        Raise(new PasswordChanged(Id));
+        Raise(new PasswordChanged(Id)); // Used by history policy to enforce reuse limits.
         Touch();
     }
 
@@ -193,15 +204,15 @@ public sealed class AppUser : IdentityUser<Guid>, IAggregateRoot
     /// </summary>
     public void RequestPasswordReset()
     {
-        Raise(new PasswordResetRequested(Id));
+        Raise(new PasswordResetRequested(Id)); // Triggers email with reset token.
     }
 
-    private void Touch() => ConcurrencyStamp = Guid.NewGuid().ToString("N");
+    private void Touch() => ConcurrencyStamp = Guid.NewGuid().ToString("N"); // Signals EF change tracking.
 
-    private void Raise(IDomainEvent evt) => _domainEvents.Add(evt);
+    private void Raise(IDomainEvent evt) => _domainEvents.Add(evt); // Domain events buffered until UoW commit.
 
     /// <summary>
     /// Clears all domain events.
     /// </summary>
-    public void ClearDomainEvents() => _domainEvents.Clear();
+    public void ClearDomainEvents() => _domainEvents.Clear(); // Called by dispatcher after publishing.
 }
