@@ -22,6 +22,7 @@ public class DomainEventDispatcher : IDomainEventDispatcher
             var handlers = (IEnumerable<object>)(_provider.GetService(typeof(IEnumerable<>).MakeGenericType(handlerType)) ?? Array.Empty<object>());
             foreach (var handler in handlers)
             {
+                // Reflection keeps dispatcher decoupled from handler types at the cost of some overhead.
                 var method = handlerType.GetMethod("HandleAsync");
                 if (method != null)
                     await (Task)method.Invoke(handler, new object?[] { domainEvent, ct })!;
