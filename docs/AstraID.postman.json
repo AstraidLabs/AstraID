@@ -1,0 +1,13 @@
+{
+  "info": {
+    "name": "AstraID",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {"name": "Discovery", "request": {"method": "GET", "url": "{{baseUrl}}/.well-known/openid-configuration"}},
+    {"name": "JWKS", "request": {"method": "GET", "url": "{{baseUrl}}/.well-known/jwks"}},
+    {"name": "UserInfo", "request": {"method": "GET", "url": "{{baseUrl}}/connect/userinfo", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]}},
+    {"name": "List Users", "request": {"method": "GET", "url": "{{baseUrl}}/api/admin/users", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]}},
+    {"name": "List Clients", "request": {"method": "GET", "url": "{{baseUrl}}/api/admin/clients", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]}}
+  ]
+}
