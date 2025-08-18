@@ -31,12 +31,7 @@ public static class OpenIddictConfig
 
                 opt.SetAuthorizationEndpointUris("/connect/authorize")
                    .SetTokenEndpointUris("/connect/token")
-                   .SetIntrospectionEndpointUris("/connect/introspect")
-                   .SetUserinfoEndpointUris("/connect/userinfo");
-
-                opt.EnableUserinfoEndpointPassthrough();
-                opt.EnableConfigurationEndpoint();
-                opt.EnableCryptographyEndpoint();
+                   .SetIntrospectionEndpointUris("/connect/introspect");
 
                 opt.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange()
                    .AllowClientCredentialsFlow()
@@ -97,7 +92,7 @@ public static class OpenIddictConfig
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 continue;
             var password = child["Password"];
-            certs.Add(new X509Certificate2(path, password, X509KeyStorageFlags.MachineKeySet));
+            certs.Add(X509CertificateLoader.LoadCertificateFromFile(path, password, X509KeyStorageFlags.MachineKeySet));
         }
         return certs;
     }
