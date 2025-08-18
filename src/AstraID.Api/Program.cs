@@ -1,63 +1,70 @@
-// Entry point configuring the HTTP pipeline and DI for AstraID.
-//
-// Key responsibilities:
-// - Compose the service container with persistence, identity and OpenIddict modules.
-// - Establish middleware order to enforce HTTPS, CORS and authentication.
-// - Bootstraps Serilog and health checks for observability.
-//
-// Why this exists: centralizes host configuration for the minimal API application.
-// Gotchas: middleware order matters for security; environment flags control seeding and swagger.
-
-using AstraID.Infrastructure.Extensions;
+using AstraID.Api.Extensions;
+using AstraID.Api.Identity;
+using AstraID.Api.OpenIddict;
+using AstraID.Api.Health;
+using AstraID.Application.Abstractions;
+using AstraID.Application.DependencyInjection;
 using AstraID.Infrastructure.DependencyInjection;
 using AstraID.Infrastructure.Startup;
-using AstraID.Persistence;
 using Serilog;
+using Hellang.Middleware.ProblemDetails;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#if DEBUG
+builder.Configuration.AddUserSecrets<Program>(optional: true);
+#endif
+
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
 
-builder.Services.AddAstraIdPersistence(builder.Configuration)
-                .AddIdentityAndAuth(builder.Configuration)
-                .AddOpenIddictServer(builder.Configuration)
-                .AddTelemetry(builder.Configuration)
-                .AddAstraIdOptions(builder.Configuration);
+builder.Services
+    .AddAstraIdApplication()
+    .AddAstraIdPersistence(builder.Configuration)
+    .AddAstraIdOpenIddict(builder.Configuration)
+    .AddAstraIdSecurity(builder.Configuration)
+    .AddAstraIdProblemDetails()
+    .AddAstraIdHealthChecks(builder.Configuration);
 
-builder.Services.AddCors(options =>
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+
+if (builder.Environment.IsDevelopment())
 {
-    // Rationale: CORS is locked to configured origins to avoid token leakage to arbitrary sites.
-    var origins = (builder.Configuration["ASTRAID_ALLOWED_CORS"] ?? string.Empty)
-        .Split(';', StringSplitOptions.RemoveEmptyEntries);
-    options.AddPolicy("cors", p => p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod());
-});
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddApiVersioning();
-
-#if DEBUG
-builder.Configuration.AddUserSecrets<Program>(optional: true); // Avoid storing secrets in source control.
-#endif
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "AstraID API", Version = "v1" });
+        var scheme = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+            {
+                Id = "Bearer",
+                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme
+            }
+        };
+        c.AddSecurityDefinition("Bearer", scheme);
+        c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+        {
+            { scheme, Array.Empty<string>() }
+        });
+    });
+}
 
 var app = builder.Build();
 
-// Apply optional auto-migrate & seed based on environment flags
-// Rationale: simplifies dev/test setup but should be disabled in production.
-await app.UseAstraIdDatabaseAsync();
-
-app.UseSerilogRequestLogging();
-
-app.UseForwardedHeaders();
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHsts(); // Enforce HTTPS in production to mitigate downgrade attacks.
-}
 app.UseHttpsRedirection();
+app.UseSecurityHeaders();
+app.UseSerilogRequestLogging();
 app.UseCors("cors");
-app.UseAuthentication(); // Must precede authorization.
+app.UseRateLimiter();
+app.UseAuthentication();
 app.UseAuthorization();
+app.UseProblemDetails();
 
 if (app.Environment.IsDevelopment())
 {
@@ -65,8 +72,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapControllers();
-app.MapHealthChecks("/health/live");
-app.MapHealthChecks("/health/ready");
+app.MapUserEndpoints();
+app.MapClientEndpoints();
+app.MapAstraIdHealthChecks();
+
+await app.UseAstraIdDatabaseAsync();
 
 app.Run();
