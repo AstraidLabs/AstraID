@@ -5,6 +5,7 @@ using AstraID.Api.DTOs.Admin;
 using AstraID.Api.Infrastructure.Audit;
 using AstraID.Api.Security;
 using AstraID.Domain.Entities;
+using AstraID.Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -48,7 +49,9 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateUserDto dto)
     {
-        var user = new AppUser { UserName = dto.Email, Email = dto.Email };
+        var email = Email.Create(dto.Email);
+        var displayName = DisplayName.Create(dto.Email);
+        var user = AppUser.Register(email, displayName);
         var result = await _users.CreateAsync(user, dto.Password);
         if (!result.Succeeded)
             return BadRequest(result.Errors);
