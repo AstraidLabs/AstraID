@@ -44,6 +44,9 @@ sequenceDiagram
 - **Observability:** structured logging and metrics export
 
 ## Installation & Configuration
+
+For a more detailed setup guide, see [docs/installation.md](docs/installation.md).
+
 1. Clone the repository
 2. Configure environment variables:
    ```bash
