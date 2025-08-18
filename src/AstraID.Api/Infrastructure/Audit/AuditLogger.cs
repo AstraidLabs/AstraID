@@ -25,6 +25,6 @@ public sealed class AuditLogger : IAuditLogger
 
     public void Log(string action, string targetId)
     {
-        _logger.LogInformation("Audit {Action} by {UserId} on {TargetId} at {UtcNow}", action, _currentUser.Id, targetId, DateTimeOffset.UtcNow);
+        _logger.LogInformation("Audit {Action} by {UserId} on {TargetId} at {UtcNow}", action, _currentUser.UserId, targetId, DateTimeOffset.UtcNow);
     }
 }

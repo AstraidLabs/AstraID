@@ -32,11 +32,12 @@ public class RolesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateRoleDto dto)
     {
-        var result = await _roles.CreateAsync(new AppRole { Name = dto.Name });
+        var role = AppRole.Create(dto.Name);
+        var result = await _roles.CreateAsync(role);
         if (!result.Succeeded)
             return BadRequest(result.Errors);
-        _audit.Log("CreateRole", dto.Name);
-        return Created($"/api/admin/roles/{dto.Name}", null);
+        _audit.Log("CreateRole", role.Name!);
+        return Created($"/api/admin/roles/{role.Name}", null);
     }
 
     [HttpDelete("{name}")]
