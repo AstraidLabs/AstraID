@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AstraID.Domain.Entities;
 
 namespace AstraID.Domain.Repositories;
@@ -13,4 +14,7 @@ public interface IUserSessionRepository
 
     /// <summary>Revokes all sessions for a user.</summary>
     Task<int> RevokeAllAsync(Guid userId, string reason, DateTime utcNow, CancellationToken ct = default);
+
+    /// <summary>Lists active sessions for a user.</summary>
+    Task<IReadOnlyList<UserSession>> ListActiveByUserAsync(Guid userId, CancellationToken ct = default);
 }
