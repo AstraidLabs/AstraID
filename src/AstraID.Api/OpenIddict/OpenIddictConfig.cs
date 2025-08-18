@@ -76,7 +76,7 @@ public static class OpenIddictConfig
             })
             .AddValidation(opt =>
             {
-                opt.UseLocalServer();
+        
                 opt.UseAspNetCore();
             });
 
@@ -86,14 +86,21 @@ public static class OpenIddictConfig
     private static IEnumerable<X509Certificate2> LoadCertificates(IConfigurationSection section)
     {
         var certs = new List<X509Certificate2>();
+
         foreach (var child in section.GetChildren())
         {
             var path = child["Path"];
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
                 continue;
+
             var password = child["Password"];
-            certs.Add(X509CertificateLoader.LoadCertificateFromFile(path, password, X509KeyStorageFlags.MachineKeySet));
+            X509Certificate2 cert = string.IsNullOrEmpty(password)
+                ? new X509Certificate2(path)
+                : new X509Certificate2(path, password, X509KeyStorageFlags.MachineKeySet);
+
+            certs.Add(cert);
         }
+
         return certs;
     }
 }
