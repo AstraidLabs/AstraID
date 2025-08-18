@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using AstraID.Domain.Entities;
 using AstraID.Domain.Repositories;
 using AstraID.Persistence;
@@ -19,4 +21,7 @@ public class UserConsentRepository : IUserConsentRepository
 
     public Task AddAsync(UserConsent consent, CancellationToken ct = default) =>
         _db.UserConsents.AddAsync(consent, ct).AsTask();
+
+    public async Task<IReadOnlyList<UserConsent>> ListByUserAsync(Guid userId, CancellationToken ct = default) =>
+        await _db.UserConsents.Where(c => c.UserId == userId && c.RevokedUtc == null).ToListAsync(ct);
 }

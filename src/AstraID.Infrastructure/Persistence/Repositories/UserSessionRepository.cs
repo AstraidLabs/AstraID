@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using AstraID.Domain.Entities;
 using AstraID.Domain.Repositories;
 using AstraID.Persistence;
@@ -26,4 +28,7 @@ public class UserSessionRepository : IUserSessionRepository
         _db.UserSessions.Where(s => s.UserId == userId && s.RevokedUtc == null)
             .ExecuteUpdateAsync(up => up.SetProperty(s => s.RevokedUtc, utcNow)
                                         .SetProperty(s => s.RevokeReason, reason), ct);
+
+    public async Task<IReadOnlyList<UserSession>> ListActiveByUserAsync(Guid userId, CancellationToken ct = default) =>
+        await _db.UserSessions.Where(s => s.UserId == userId && s.RevokedUtc == null).ToListAsync(ct);
 }

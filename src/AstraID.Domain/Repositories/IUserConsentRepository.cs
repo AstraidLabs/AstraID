@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AstraID.Domain.Entities;
 
 namespace AstraID.Domain.Repositories;
@@ -10,4 +11,7 @@ public interface IUserConsentRepository
 
     /// <summary>Adds a new consent.</summary>
     Task AddAsync(UserConsent consent, CancellationToken ct = default);
+
+    /// <summary>Lists active consents for a user.</summary>
+    Task<IReadOnlyList<UserConsent>> ListByUserAsync(Guid userId, CancellationToken ct = default);
 }
