@@ -8,6 +8,8 @@ using AstraID.Infrastructure.DependencyInjection;
 using AstraID.Infrastructure.Startup;
 using Serilog;
 using Hellang.Middleware.ProblemDetails;
+using AstraID.Api.Infrastructure.Audit;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +27,11 @@ builder.Services
     .AddAstraIdProblemDetails()
     .AddAstraIdHealthChecks(builder.Configuration);
 
+builder.Services.AddControllers();
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+builder.Services.AddScoped<IAuditLogger, AuditLogger>();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -57,6 +62,10 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 app.UseHttpsRedirection();
 app.UseSecurityHeaders();
 app.UseSerilogRequestLogging();
@@ -72,6 +81,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.MapControllers();
 app.MapUserEndpoints();
 app.MapClientEndpoints();
 app.MapAstraIdHealthChecks();

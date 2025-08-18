@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using AstraID.Api.Security;
 
 namespace AstraID.Api.Extensions;
 
@@ -34,6 +35,7 @@ public static class ServiceCollectionExtensionsSecurity
 
         services.AddAuthorization(options =>
         {
+            Policies.AddPolicies(options);
             options.AddPolicy("require.users.write", policy =>
             {
                 policy.RequireAuthenticatedUser();

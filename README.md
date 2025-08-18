@@ -65,6 +65,28 @@ For a more detailed setup guide, see [docs/installation.md](docs/installation.md
    - `GET /health/live`
    - `GET /health/ready`
 
+## OIDC Endpoints, Admin API & Docker
+
+### OIDC Endpoints
+- Discovery: `GET /.well-known/openid-configuration`
+- JWKS: `GET /.well-known/jwks`
+- UserInfo: `GET /connect/userinfo` (requires bearer access token)
+
+### Admin API
+- All routes require **scope** `astra.admin` and **role** `admin`.
+- Users: `GET/POST/PUT/DELETE /api/admin/users`
+- Roles: `GET/POST/DELETE /api/admin/roles`
+- Clients: `GET/POST/PUT/DELETE /api/admin/clients`
+
+### Sample `curl`
+```bash
+curl -H "Authorization: Bearer <token>" https://id.example.com/connect/userinfo
+```
+
+### Docker
+- Exposed on port 8080
+- Healthcheck hits `/health/ready`
+
 ## Security
 - HTTPS enforced in production
 - Client secrets and passwords are stored hashed
