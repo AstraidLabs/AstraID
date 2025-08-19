@@ -9,15 +9,30 @@ using AstraID.Infrastructure.Startup;
 using Serilog;
 using Hellang.Middleware.ProblemDetails;
 using AstraID.Api.Infrastructure.Audit;
+using AstraID.Api.Infrastructure.JsoncConfiguration;
 using Microsoft.AspNetCore.HttpOverrides;
 using AstraID.Api.Options;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var preConfig = new ConfigurationBuilder()
+    .AddEnvironmentVariables()
+    .AddJsonFile("appsettings.json", optional: true)
+    .Build();
+var useJsonc = preConfig.GetValue<bool>("UseJsonc");
+
 builder.Configuration.Sources.Clear();
+builder.Configuration.SetBasePath(builder.Environment.ContentRootPath);
+if (useJsonc)
+{
+    builder.Configuration
+        .AddJsoncFile("appsettings.jsonc", optional: true, reloadOnChange: true)
+        .AddJsoncFile($"appsettings.{builder.Environment.EnvironmentName}.jsonc", optional: true, reloadOnChange: true)
+        .AddJsoncFile("appsettings.Local.jsonc", optional: true, reloadOnChange: true);
+}
+
 builder.Configuration
-    .SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true)
@@ -34,15 +49,21 @@ builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configurati
 builder.Services.AddOptions<AstraIdOptions>()
     .Bind(config.GetSection("AstraId"))
     .ValidateDataAnnotations()
-    .Validate(options => options.AllowedCors.All(origin => Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps),
-        "CORS origins must be absolute HTTPS URLs")
-    .Validate(options => Uri.IsWellFormedUriString(options.Issuer, UriKind.Absolute), "Invalid Issuer URL")
     .ValidateOnStart();
 
 builder.Services.AddOptions<AuthOptions>()
     .Bind(config.GetSection("Auth"))
     .ValidateDataAnnotations()
     .ValidateOnStart();
+
+builder.Services.AddOptions<ConnectionStringsOptions>()
+    .Bind(config.GetSection("ConnectionStrings"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddSingleton<IValidateOptions<AstraIdOptions>, AstraIdOptionsValidator>();
+builder.Services.AddSingleton<IValidateOptions<AuthOptions>, AuthOptionsValidator>();
+builder.Services.AddSingleton<IValidateOptions<ConnectionStringsOptions>, ConnectionStringsOptionsValidator>();
 
 builder.Services
     .AddAstraIdApplication()
@@ -106,7 +127,8 @@ catch (OptionsValidationException ex)
 {
     foreach (var failure in ex.Failures)
     {
-        Console.Error.WriteLine($"Configuration error in '{ex.OptionsName}': {failure}");
+        var (key, message, fix) = ValidationError.Parse(failure);
+        Console.Error.WriteLine($"Configuration error: {key} - {message}. {fix}");
     }
     if (builder.Environment.IsProduction())
     {
@@ -137,17 +159,20 @@ if (app.Environment.IsDevelopment())
     app.MapGet("/_diag/config", (IConfiguration configuration) =>
     {
         var root = (IConfigurationRoot)configuration;
-        var masked = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "ConnectionStrings:Default",
-            "Auth:Introspection:ClientSecret"
-        };
         var snapshot = new Dictionary<string, object?>();
+        string Mask(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value.Length <= 2 ? new string('*', value.Length) : new string('*', value.Length - 2) + value[^2..];
+        }
         foreach (var kvp in configuration.AsEnumerable())
         {
             if (string.IsNullOrEmpty(kvp.Value)) continue;
             var provider = root.Providers.First(p => p.TryGet(kvp.Key, out _));
-            var value = masked.Contains(kvp.Key) ? "***" : kvp.Value;
+            var shouldMask = kvp.Key.Contains("Password", StringComparison.OrdinalIgnoreCase) ||
+                             kvp.Key.Contains("Secret", StringComparison.OrdinalIgnoreCase) ||
+                             kvp.Key.Equals("ConnectionStrings:Default", StringComparison.OrdinalIgnoreCase);
+            var value = shouldMask ? Mask(kvp.Value) : kvp.Value;
             snapshot[kvp.Key] = new { value, source = provider.ToString() };
         }
         return Results.Json(snapshot);
@@ -156,18 +181,21 @@ if (app.Environment.IsDevelopment())
     app.MapGet("/_diag/config/validate", (IServiceProvider sp) =>
     {
         var issues = new List<object>();
-        try { _ = sp.GetRequiredService<IOptions<AstraIdOptions>>().Value; }
-        catch (OptionsValidationException ex)
+        void Capture(Action action)
         {
-            foreach (var f in ex.Failures)
-                issues.Add(new { Key = ex.OptionsName, Message = f, HowToFix = string.Empty });
+            try { action(); }
+            catch (OptionsValidationException ex)
+            {
+                foreach (var f in ex.Failures)
+                {
+                    var parsed = ValidationError.Parse(f);
+                    issues.Add(new { Key = parsed.Key, Message = parsed.Message, Fix = parsed.Fix });
+                }
+            }
         }
-        try { _ = sp.GetRequiredService<IOptions<AuthOptions>>().Value; }
-        catch (OptionsValidationException ex)
-        {
-            foreach (var f in ex.Failures)
-                issues.Add(new { Key = ex.OptionsName, Message = f, HowToFix = string.Empty });
-        }
+        Capture(() => _ = sp.GetRequiredService<IOptions<AstraIdOptions>>().Value);
+        Capture(() => _ = sp.GetRequiredService<IOptions<AuthOptions>>().Value);
+        Capture(() => _ = sp.GetRequiredService<IOptions<ConnectionStringsOptions>>().Value);
         var status = issues.Count == 0 ? "OK" : "ERROR";
         return Results.Json(new { status, issues });
     });
