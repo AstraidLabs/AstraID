@@ -1,8 +1,11 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Json;
+using Microsoft.Extensions.FileProviders;
 
 namespace AstraID.Api.Infrastructure.JsoncConfiguration;
 
@@ -16,9 +19,8 @@ public class JsoncConfigurationProvider : FileConfigurationProvider
         var text = reader.ReadToEnd();
         var noComments = Regex.Replace(text, @"//.*?$|/\*.*?\*/", string.Empty, RegexOptions.Singleline | RegexOptions.Multiline);
         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(noComments));
-        var jsonProvider = new JsonConfigurationProvider(new JsonConfigurationSource());
-        jsonProvider.Load(ms);
-        Data = jsonProvider.Data;
+        var configuration = new ConfigurationBuilder().AddJsonStream(ms).Build();
+        Data = configuration.AsEnumerable().ToDictionary(kv => kv.Key, kv => kv.Value);
     }
 }
 
@@ -37,10 +39,20 @@ public static class JsoncConfigurationExtensions
     {
         var source = new JsoncConfigurationSource
         {
-            Path = path,
             Optional = optional,
             ReloadOnChange = reloadOnChange
         };
+
+        if (Path.IsPathRooted(path))
+        {
+            source.FileProvider = new PhysicalFileProvider(Path.GetDirectoryName(path)!);
+            source.Path = Path.GetFileName(path);
+        }
+        else
+        {
+            source.Path = path;
+        }
+
         return builder.Add(source);
     }
 }
