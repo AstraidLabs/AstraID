@@ -1,0 +1,11 @@
+{
+  "ConnectionStrings": {
+    "Default": "Server=localhost;Database=AstraId;User Id=sa;Password=<YourStrong!Passw0rd>;TrustServerCertificate=True"
+  },
+  "Auth": {
+    "Introspection": {
+      "ClientId": "<client-id>",
+      "ClientSecret": "<client-secret>"
+    }
+  }
+}
