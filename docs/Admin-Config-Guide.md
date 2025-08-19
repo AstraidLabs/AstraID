@@ -4,9 +4,9 @@ This guide walks administrators through configuring AstraID using JSON files or 
 
 ## Quick Start
 1. Copy the local template:
-   - **Linux/macOS:** `cp src/AstraID.Api/appsettings.Local.json.example src/AstraID.Api/appsettings.Local.json`
-   - **Windows:** `copy src\AstraID.Api\appsettings.Local.json.example src\AstraID.Api\appsettings.Local.json`
-2. Edit `appsettings.Local.json` with your connection string and OAuth introspection credentials.
+   - **Linux/macOS:** `./scripts/config-new-local.sh`
+   - **Windows:** `powershell .\scripts\config-new-local.ps1`
+2. Edit `appsettings.Local.json` and replace all `CHANGE_ME` placeholders.
 3. Run the API and verify configuration with `curl http://localhost:5000/_diag/config/validate` (development only).
 
 ## Configuration Files
@@ -17,11 +17,12 @@ This guide walks administrators through configuring AstraID using JSON files or 
 ## Key Settings
 | Key | Description | Example |
 |-----|-------------|---------|
-| `ConnectionStrings:Default` | Database connection string | `Server=localhost;Database=AstraId;User Id=sa;Password=StrongPass;TrustServerCertificate=True` |
-| `AstraId:Issuer` | Public base URL of the identity server | `https://id.example.com` |
-| `AstraId:AllowedCors` | Array of allowed HTTPS origins for CORS | `["https://app.example.com"]` |
-| `Auth:Introspection:ClientId` | Client id used for token introspection | `astra-admin` |
-| `Auth:Introspection:ClientSecret` | Secret for introspection client | `p@ssw0rd` |
+| `ConnectionStrings:Default` | Database connection string | `Server=YOUR_HOST\SQLEXPRESS;Database=AstraID;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;` |
+| `AstraId:Issuer` | Public base URL of the identity server (HTTPS) | `https://id.example.com` |
+| `AstraId:AllowedCors` | Array of allowed browser origins | `["https://app.example.com"]` |
+| `Auth:Certificates:Signing[n].Path` | Path to a PFX signing cert | `C:\\certs\\astraid-signing.pfx` |
+| `Auth:Introspection:ClientId` | (When ValidationMode = Introspection) client id for introspection | `admin-cli` |
+| `Auth:Introspection:ClientSecret` | (When ValidationMode = Introspection) client secret | `p@ssw0rd` |
 
 ## Environment Variable Overrides
 Any setting can be overridden with environment variables using `__` as the separator.
@@ -30,12 +31,18 @@ Any setting can be overridden with environment variables using `__` as the separ
 ```bash
 export ConnectionStrings__Default="Server=..."
 export AstraId__Issuer="https://id.example.com"
+export AstraId__AllowedCors__0="https://app.example.com"
+export Auth__Introspection__ClientId="admin-cli"
+export Auth__Introspection__ClientSecret="s3cr3t"
 ```
 
 ### Windows PowerShell
 ```powershell
 $env:ConnectionStrings__Default = "Server=..."
 $env:AstraId__Issuer = "https://id.example.com"
+$env:AstraId__AllowedCors__0 = "https://app.example.com"
+$env:Auth__Introspection__ClientId = "admin-cli"
+$env:Auth__Introspection__ClientSecret = "s3cr3t"
 ```
 
 ## Troubleshooting
