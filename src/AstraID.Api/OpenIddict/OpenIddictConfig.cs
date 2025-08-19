@@ -26,19 +26,37 @@ public static class OpenIddictConfig
             .AddCore(opt => opt.UseEntityFrameworkCore().UseDbContext<AstraIdDbContext>())
             .AddServer(opt =>
             {
-                var issuer = configuration["ASTRAID_ISSUER"] ?? throw new InvalidOperationException("ASTRAID_ISSUER not set");
+                var issuer = configuration["ASTRAID_ISSUER"] ?? configuration["AstraId:Issuer"]
+                    ?? throw new InvalidOperationException("Issuer not configured");
                 opt.SetIssuer(new Uri(issuer));
 
                 opt.SetAuthorizationEndpointUris("/connect/authorize")
                    .SetTokenEndpointUris("/connect/token")
-                   .SetIntrospectionEndpointUris("/connect/introspect");
+                   .SetIntrospectionEndpointUris("/connect/introspect")
+                   .SetUserinfoEndpointUris("/connect/userinfo")
+                   .SetRevocationEndpointUris("/connect/revocation")
+                   .SetEndSessionEndpointUris("/connect/logout")
+                   .SetJsonWebKeySetEndpointUris("/connect/jwks")
+                   .SetPushedAuthorizationEndpointUris("/connect/par");
 
                 opt.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange()
                    .AllowClientCredentialsFlow()
                    .AllowRefreshTokenFlow();
 
-                opt.RegisterScopes(Scopes.OpenId, Scopes.Profile, Scopes.Email,
-                    Scopes.Phone, Scopes.Address, "roles", "astra.admin", "offline_access");
+                // Only allow the S256 code challenge method for PKCE
+                opt.Configure(options =>
+                {
+                    options.CodeChallengeMethods.Clear();
+                    options.CodeChallengeMethods.Add(CodeChallengeMethods.Sha256);
+                });
+
+                var standardScopes = new[]
+                {
+                    Scopes.OpenId, Scopes.Profile, Scopes.Email,
+                    Scopes.Phone, Scopes.Address, Scopes.OfflineAccess
+                };
+                var customScopes = configuration.GetSection("Auth:Scopes").Get<string[]>() ?? Array.Empty<string>();
+                opt.RegisterScopes(standardScopes.Concat(customScopes));
 
                 var lifetimes = configuration.GetSection("Auth:TokenLifetimes");
                 var access = lifetimes.GetValue<int?>("AccessMinutes") ?? 60;
@@ -70,13 +88,30 @@ public static class OpenIddictConfig
                     opt.AddDevelopmentEncryptionCertificate();
                 }
 
+                var tokenFormat = configuration["Auth:AccessTokenFormat"] ?? "Jwt";
+                if (string.Equals(tokenFormat, "Reference", StringComparison.OrdinalIgnoreCase))
+                {
+                    opt.UseReferenceAccessTokens();
+                }
+                else
+                {
+                    opt.DisableAccessTokenEncryption();
+                }
+
+                if (configuration.GetValue<bool?>("AstraId:RequireParForPublicClients") == true)
+                {
+                    opt.RequirePushedAuthorizationRequests();
+                }
+
                 opt.UseAspNetCore()
                     .EnableAuthorizationEndpointPassthrough()
-                    .EnableTokenEndpointPassthrough();
+                    .EnableTokenEndpointPassthrough()
+                    .EnableUserinfoEndpointPassthrough()
+                    .EnableRevocationEndpointPassthrough();
             })
             .AddValidation(opt =>
             {
-        
+
                 opt.UseAspNetCore();
             });
 

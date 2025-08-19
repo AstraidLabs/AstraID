@@ -83,7 +83,7 @@ public class OidcTests : IClassFixture<TestFactory>
     [Fact]
     public async Task Jwks_Exposed()
     {
-        var json = await _client.GetFromJsonAsync<Dictionary<string, object>>("/.well-known/jwks");
+        var json = await _client.GetFromJsonAsync<Dictionary<string, object>>("/connect/jwks");
         json!.Should().NotBeNull();
     }
 
@@ -101,6 +101,7 @@ public class OidcTests : IClassFixture<TestFactory>
         opt.AccessTokenLifetime.Should().Be(TimeSpan.FromMinutes(60));
         opt.IdentityTokenLifetime.Should().Be(TimeSpan.FromMinutes(15));
         opt.RefreshTokenLifetime.Should().Be(TimeSpan.FromDays(14));
+        opt.UseReferenceAccessTokens.Should().BeFalse();
     }
 
     [Fact]
