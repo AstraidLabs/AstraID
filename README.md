@@ -47,6 +47,12 @@ sequenceDiagram
 
 For a more detailed setup guide, see [docs/installation.md](docs/installation.md).
 
+Administrators should review the configuration guide at [docs/Admin-Config-Guide.md](docs/Admin-Config-Guide.md).
+Key files under `src/AstraID.Api`:
+- `appsettings.json` – defaults without secrets
+- `appsettings.Production.json` – production defaults
+- `appsettings.Local.json` – local overrides and secrets (not committed)
+
 1. Clone the repository
 2. Configure environment variables:
    ```bash
