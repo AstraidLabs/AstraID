@@ -1,0 +1,129 @@
+{
+  "info": {
+    "name": "AstraID",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Discovery",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/.well-known/openid-configuration"
+      }
+    },
+    {
+      "name": "Token (Client Credentials)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "grant_type", "value": "client_credentials" },
+            { "key": "scope", "value": "api" }
+          ]
+        },
+        "url": "{{baseUrl}}/connect/token",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{clientId}}", "type": "string" },
+            { "key": "password", "value": "{{clientSecret}}", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Authorize (PKCE)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const verifier = Array.from({length:64},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('');",
+              "pm.variables.set('codeVerifier', verifier);",
+              "const challenge = CryptoJS.enc.Base64url.stringify(CryptoJS.SHA256(verifier));",
+              "pm.variables.set('codeChallenge', challenge);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/connect/authorize?client_id={{clientId}}&response_type=code&redirect_uri={{redirectUri}}&scope=api openid&code_challenge={{codeChallenge}}&code_challenge_method=S256&response_mode=query",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "connect", "authorize" ],
+          "query": [
+            { "key": "client_id", "value": "{{clientId}}" },
+            { "key": "response_type", "value": "code" },
+            { "key": "redirect_uri", "value": "{{redirectUri}}" },
+            { "key": "scope", "value": "api openid" },
+            { "key": "code_challenge", "value": "{{codeChallenge}}" },
+            { "key": "code_challenge_method", "value": "S256" },
+            { "key": "response_mode", "value": "query" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "UserInfo",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/connect/userinfo"
+      }
+    },
+    {
+      "name": "Introspect",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "token", "value": "{{accessToken}}" }
+          ]
+        },
+        "url": "{{baseUrl}}/connect/introspect",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{introspectionClientId}}", "type": "string" },
+            { "key": "password", "value": "{{introspectionClientSecret}}", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Revoke",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "token", "value": "{{refreshToken}}" }
+          ]
+        },
+        "url": "{{baseUrl}}/connect/revocation"
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "https://localhost:5001" },
+    { "key": "clientId", "value": "CHANGE_ME" },
+    { "key": "clientSecret", "value": "CHANGE_ME" },
+    { "key": "redirectUri", "value": "https://localhost/callback" },
+    { "key": "introspectionClientId", "value": "admin-cli" },
+    { "key": "introspectionClientSecret", "value": "CHANGE_ME" }
+  ]
+}
