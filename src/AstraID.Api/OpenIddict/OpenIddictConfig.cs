@@ -56,7 +56,7 @@ public static class OpenIddictConfig
                     Scopes.Phone, Scopes.Address, Scopes.OfflineAccess
                 };
                 var customScopes = configuration.GetSection("Auth:Scopes").Get<string[]>() ?? Array.Empty<string>();
-                opt.RegisterScopes(standardScopes.Concat(customScopes).ToArray());
+                opt.RegisterScopes(standardScopes.Concat(customScopes));
 
                 var lifetimes = configuration.GetSection("Auth:TokenLifetimes");
                 var access = lifetimes.GetValue<int?>("AccessMinutes") ?? 60;
@@ -106,7 +106,8 @@ public static class OpenIddictConfig
                 opt.UseAspNetCore()
                     .EnableAuthorizationEndpointPassthrough()
                     .EnableTokenEndpointPassthrough()
-                    .EnableUserInfoEndpointPassthrough();
+                    .EnableUserInfoEndpointPassthrough()
+                    .EnableRevocationEndpointPassthrough();
             })
             .AddValidation(opt =>
             {
