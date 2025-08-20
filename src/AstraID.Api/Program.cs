@@ -7,6 +7,11 @@ using AstraID.Application.DependencyInjection;
 using AstraID.Infrastructure.DependencyInjection;
 using AstraID.Infrastructure.Startup;
 using Serilog;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection;
+using AstraID.Domain.Entities;
+using CorrelationId;
+using OpenTelemetry.Trace;
 using Hellang.Middleware.ProblemDetails;
 using AstraID.Api.Infrastructure.Audit;
 using AstraID.Api.Infrastructure.JsoncConfiguration;
@@ -44,7 +49,10 @@ var config = builder.Configuration;
 builder.Configuration.AddUserSecrets<Program>(optional: true);
 #endif
 
-builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
+builder.Host.UseSerilog((ctx, cfg) => cfg
+    .ReadFrom.Configuration(ctx.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithCorrelationId());
 
 builder.Services.AddOptions<AstraIdOptions>()
     .Bind(config.GetSection("AstraId"))
@@ -65,13 +73,49 @@ builder.Services.AddSingleton<IValidateOptions<AstraIdOptions>, AstraIdOptionsVa
 builder.Services.AddSingleton<IValidateOptions<AuthOptions>, AuthOptionsValidator>();
 builder.Services.AddSingleton<IValidateOptions<ConnectionStringsOptions>, ConnectionStringsOptionsValidator>();
 
+builder.Services.AddRouting();
+builder.Services.AddCorrelationId();
+
 builder.Services
     .AddAstraIdApplication()
-    .AddAstraIdPersistence(builder.Configuration)
+    .AddAstraIdPersistence(builder.Configuration);
+
+// Data Protection keys persisted in DB (for multi-instance and stable cookies)
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<AstraID.Persistence.AstraIdDbContext>();
+
+// ASP.NET Identity (core only, no UI)
+builder.Services.AddIdentityCore<AppUser>(o =>
+    {
+        o.User.RequireUniqueEmail = true;
+        o.SignIn.RequireConfirmedEmail = true;
+    })
+    .AddRoles<AppRole>()
+    .AddEntityFrameworkStores<AstraID.Persistence.AstraIdDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<IdentityOptions>(o =>
+{
+    o.Password.RequiredLength = 12;
+    o.Password.RequireUppercase = true;
+    o.Password.RequireLowercase = true;
+    o.Password.RequireDigit = true;
+    o.Password.RequireNonAlphanumeric = false;
+    o.Lockout.MaxFailedAccessAttempts = 5;
+    o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+});
+
+builder.Services
     .AddAstraIdOpenIddict(builder.Configuration)
     .AddAstraIdSecurity(builder.Configuration)
     .AddAstraIdProblemDetails()
     .AddAstraIdHealthChecks(builder.Configuration);
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(b => b
+        .AddAspNetCoreInstrumentation()
+        .AddSqlClientInstrumentation()
+        .AddOtlpExporter());
 
 builder.Services.AddControllers();
 
@@ -144,6 +188,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 app.UseHttpsRedirection();
 app.UseSecurityHeaders();
+app.UseCorrelationId();
 app.UseSerilogRequestLogging();
 app.UseCors("cors");
 app.UseRateLimiter();
