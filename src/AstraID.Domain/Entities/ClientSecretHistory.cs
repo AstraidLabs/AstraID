@@ -28,6 +28,11 @@ public sealed class ClientSecretHistory : Entity<Guid>
     /// </summary>
     public bool Active { get; private set; }
 
+    /// <summary>
+    /// Timestamp when the secret was revoked.
+    /// </summary>
+    public DateTime? RevokedUtc { get; private set; }
+
     private ClientSecretHistory()
     {
     }
@@ -49,5 +54,9 @@ public sealed class ClientSecretHistory : Entity<Guid>
     /// <summary>
     /// Marks the secret as inactive.
     /// </summary>
-    public void Deactivate() => Active = false;
+    public void Deactivate()
+    {
+        Active = false;
+        RevokedUtc = DateTime.UtcNow;
+    }
 }

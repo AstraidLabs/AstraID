@@ -26,6 +26,9 @@ internal sealed class ClientSecretHistoryConfiguration : IEntityTypeConfiguratio
         builder.Property(h => h.Active)
             .HasColumnType("bit");
 
+        builder.Property(h => h.RevokedUtc)
+            .HasColumnType("datetime2");
+
         builder.HasIndex(h => new { h.ClientId, h.Active })
             .IsUnique()
             .HasFilter("[Active] = 1");
