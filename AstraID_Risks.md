@@ -9,3 +9,7 @@
 | Absent MFA/federation | Higher risk of account takeover | Plan roadmap for TOTP/WebAuthn and external IdP federation |
 | Incomplete security headers & CSP | Exposure to XSS/Clickjacking | Harden headers, use nonces, review allowed sources |
 | Limited observability (no OpenTelemetry exporter) | Hard to detect performance issues | Configure tracing/metrics exporters and dashboards |
+
+---
+
+See also: [Risk Register](AstraID_RiskRegister.md) · [Gap Report](AstraID_GapReport.md)

@@ -37,3 +37,7 @@
 
 ## H. Tests
 - ⚠ Only basic discovery/JWKS/userinfo tests; missing auth code, refresh, client credentials, introspection, revocation and negative cases
+
+---
+
+Return to [README](README.md)

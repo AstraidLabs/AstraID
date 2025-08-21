@@ -10,3 +10,7 @@
 |Provide user management API|Minimal endpoints for register/get|ApplicationEndpoints.Users maps routes to handlers【F:src/AstraID.Api/Extensions/ApplicationEndpoints.Users.cs†L13-L34】|
 |Provide client management API|Register, rotate secret, get client|ApplicationEndpoints.Clients handlers【F:src/AstraID.Api/Extensions/ApplicationEndpoints.Clients.cs†L13-L40】|
 |Health monitoring|Liveness and readiness checks|HealthChecksConfig mapping【F:src/AstraID.Api/Health/HealthChecksConfig.cs†L15-L23】|
+
+---
+
+See also: [Feature Inventory](AstraID_FeatureInventory.md) · [Capabilities](AstraID_Capabilities.md)

@@ -35,3 +35,7 @@
 - All positive cases return expected HTTP status and payload.
 - Negative cases yield RFC-compliant error responses.
 - Health checks report `Healthy` when dependencies available.
+
+---
+
+Related docs: [Installation](docs/INSTALL.md) · [Configuration](docs/CONFIGURATION.md) · [Security](docs/SECURITY.md) · [Action Plan](AstraID_FixPlan.md)

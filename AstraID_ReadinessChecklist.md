@@ -1,4 +1,6 @@
-# AstraID Readiness Checklist
+# AstraID Readiness Report
+
+Overall score: **2.5 / 5** – core OAuth flows are present but token validation, identity, and observability gaps remain.
 
 | Item | Status | Evidence |
 |---|---|---|
@@ -20,3 +22,9 @@
 | Correlation ID logging | ⚠️ | Not implemented; recommended in FixPlan |
 | OpenTelemetry tracing | ⚠️ | Stub only, no exporter configured【F:src/AstraID.Infrastructure/Extensions/ServiceCollectionExtensions.cs†L91-L93】 |
 | Comprehensive tests executed | ⚠️ | `dotnet` SDK missing; tests not run（see terminal）【74ab83†L1-L3】 |
+
+**Gaps:** token validation mode, Identity setup, Data Protection key persistence, correlation IDs, OpenTelemetry exporter, and test coverage.
+
+---
+
+See also: [Fix Plan](AstraID_FixPlan.md) · [Test Plan](AstraID_TestPlan.md) · [Security Notes](docs/SECURITY.md)

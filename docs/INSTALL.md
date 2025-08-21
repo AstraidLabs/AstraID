@@ -10,7 +10,7 @@ This guide walks administrators through installing **AstraID** on Windows, Linux
 | [SQL Server](https://www.microsoft.com/sql-server) | 2019+ | Express/Developer editions work; LocalDB for dev |
 | EF Core Tools | 9.0 | `dotnet tool install --global dotnet-ef` |
 | PowerShell or Bash | – | used for CLI commands |
-| Certificates (optional) | PFX | for signing/encryption when not using dev certs |
+| Certificates (optional) | PFX | TLS and token signing/encryption certificates |
 
 ## 1. Clone and Restore
 
@@ -52,29 +52,24 @@ This guide walks administrators through installing **AstraID** on Windows, Linux
 
 ## 3. Create the Database
 
-Migrations are not applied automatically unless `AstraId:AutoMigrate=true`.
+AstraID ships with EF Core migrations. Apply them before first run and whenever new migrations are added.
 
 ```bash
 # Apply migrations
- dotnet ef database update -p src/AstraID.Persistence -s src/AstraID.Api
+dotnet ef database update -p src/AstraID.Persistence -s src/AstraID.Api
 ```
 
 To add new migrations later:
 
 ```bash
 dotnet ef migrations add <Name> -p src/AstraID.Persistence -s src/AstraID.Api
+dotnet ef database update -p src/AstraID.Persistence -s src/AstraID.Api
 ```
 
 ## 4. Run
 
 ```bash
-# Start the API on the default port (https://localhost:5001)
- dotnet run -p src/AstraID.Api
-```
-
-To run a specific profile or port:
-
-```bash
+# Start the API (https://localhost:5001)
 dotnet run -p src/AstraID.Api --launch-profile https
 ```
 
@@ -96,7 +91,9 @@ Serilog is configured to output structured JSON to the console. Adjust `Serilog`
 ## 7. Uninstall / Clean
 
 1. Stop the running process.
-2. Remove the created database if desired.
+2. Remove the database if desired.
 3. Delete the repository directory.
 
-You now have a working AstraID installation.
+---
+
+Next: [Configuration](CONFIGURATION.md) · [Security](SECURITY.md) · [Troubleshooting](TROUBLESHOOTING.md)

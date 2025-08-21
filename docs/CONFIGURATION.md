@@ -42,7 +42,7 @@ Settings are loaded in the following order (later entries override earlier ones)
 | `Auth:Certificates:Signing[]` | Array of signing certs (Path, Password). | `{ "Path": "C:\\certs\\signing.pfx", "Password": "CHANGE_ME" }` |
 | `Auth:Certificates:Encryption[]` | Array of encryption certs. | `{ "Path": "C:\\certs\\enc.pfx", "Password": "CHANGE_ME" }` |
 | `Auth:Introspection:ClientId` | Required when `ValidationMode=Introspection`. | `admin-cli` |
-| `Auth:Introspection:ClientSecret` | Secret for introspection client. | `CHANGE_ME` |
+| `Auth:Introspection:ClientSecret` | Secret for introspection client. | `***` |
 
 ## Environment Variable Overrides
 
@@ -53,7 +53,7 @@ Use double underscores (`__`) instead of colons (`:`) and indexes for arrays.
 | `ConnectionStrings:Default` | `$env:ConnectionStrings__Default="Server=.\\SQLEXPRESS;Database=AstraID;Integrated Security=True"` | `export ConnectionStrings__Default="Server=.\\SQLEXPRESS;Database=AstraID;Integrated Security=True"` |
 | `AstraId:Issuer` | `$env:AstraId__Issuer="https://id.example.com"` | `export AstraId__Issuer="https://id.example.com"` |
 | `AstraId:AllowedCors[0]` | `$env:AstraId__AllowedCors__0="https://app.example.com"` | `export AstraId__AllowedCors__0="https://app.example.com"` |
-| `Auth:Introspection:ClientSecret` | `$env:Auth__Introspection__ClientSecret="CHANGE_ME"` | `export Auth__Introspection__ClientSecret="CHANGE_ME"` |
+| `Auth:Introspection:ClientSecret` | `$env:Auth__Introspection__ClientSecret="***"` | `export Auth__Introspection__ClientSecret="***"` |
 
 ## Validation Rules
 
@@ -64,5 +64,11 @@ AstraID validates configuration on startup and fails fast if rules are violated:
 - `AstraId:RateLimit:Rps` must be between 1 and 1000; `Burst` between 1 and 5000 and >= `Rps`.
 - `Auth:Certificates` paths must exist unless `UseDevelopmentCertificates=true`.
 - `ConnectionStrings:Default` must include credentials or `Integrated Security=True`.
+
+Store secrets (connection strings, client secrets, certificate passwords) in a secure vault or environment variables; never commit them to source control.
+
+---
+
+See also: [Installation](INSTALL.md) · [Security](SECURITY.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
 Edit [`docs/SAMPLES/appsettings.Local.json.example`](SAMPLES/appsettings.Local.json.example) for a full template.

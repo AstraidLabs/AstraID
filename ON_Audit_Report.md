@@ -80,3 +80,7 @@
 - **Evidence:** Integration tests cover discovery, JWKS, and basic CRUD only【F:tests/AstraID.IntegrationTests/OidcTests.cs†L55-L89】
 - **Fix:** Add tests for Authorization Code + PKCE, Refresh Token, Client Credentials, UserInfo, Introspection, Revocation, and negative scenarios.
 - **Acceptance test:** `dotnet test` executes new suites covering positive and negative OAuth flows.
+
+---
+
+Return to [README](README.md)

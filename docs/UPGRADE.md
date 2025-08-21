@@ -2,6 +2,11 @@
 
 Use this guide to upgrade AstraID between versions. Always back up your database and configuration files before proceeding.
 
+## Breaking Changes
+
+- Tokens now validated based on `Auth:ValidationMode` (`Jwt` or `Introspection`). Ensure configuration reflects desired mode.
+- CORS and rate limit settings are sourced from `AstraId` options instead of environment variables.
+
 ## 0.2 → 0.3
 
 | Old Setting | New Setting | Action |
@@ -31,3 +36,7 @@ For production environments:
 ## Troubleshooting
 
 If startup fails after upgrading, check `docs/TROUBLESHOOTING.md` and verify that configuration keys match the current version.
+
+---
+
+See also: [Installation](INSTALL.md) · [Configuration](CONFIGURATION.md) · [Security](SECURITY.md)

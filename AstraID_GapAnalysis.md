@@ -15,3 +15,7 @@
 - **P0** – Implement missing OAuth endpoints (UserInfo, logout), expand client/user management APIs, and ensure confidential client secrets are hashed before persistence.
 - **P1** – Add comprehensive unit/integration tests; include OpenIddict E2E tests for auth flows; configure OpenTelemetry exporters and log filtering to avoid PII.
 - **P2** – Separate domain from EF Core dependencies; finalize deployment artifacts (Dockerfile, CI/CD), and document backup/restore and rotation policies.
+
+---
+
+See also: [Gap Report](AstraID_GapReport.md) · [Fix Plan](AstraID_FixPlan.md)
