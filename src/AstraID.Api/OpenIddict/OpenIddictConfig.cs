@@ -26,14 +26,14 @@ public static class OpenIddictConfig
             .AddCore(opt => opt.UseEntityFrameworkCore().UseDbContext<AstraIdDbContext>())
             .AddServer(opt =>
             {
-                var issuer = configuration["ASTRAID_ISSUER"] ?? configuration["AstraId:Issuer"]
-                    ?? throw new InvalidOperationException("Issuer not configured");
+                var issuer = configuration["AstraId:Issuer"] ?? configuration["ASTRAID_ISSUER"]
+                             ?? throw new InvalidOperationException("Issuer not configured");
                 opt.SetIssuer(new Uri(issuer));
 
                 opt.SetAuthorizationEndpointUris("/connect/authorize")
                    .SetTokenEndpointUris("/connect/token")
-                   .SetIntrospectionEndpointUris("/connect/introspect")
                    .SetUserInfoEndpointUris("/connect/userinfo")
+                   .SetIntrospectionEndpointUris("/connect/introspect")
                    .SetRevocationEndpointUris("/connect/revocation")
                    .SetEndSessionEndpointUris("/connect/logout")
                    .SetJsonWebKeySetEndpointUris("/connect/jwks")
@@ -43,72 +43,47 @@ public static class OpenIddictConfig
                    .AllowClientCredentialsFlow()
                    .AllowRefreshTokenFlow();
 
-                // Only allow the S256 code challenge method for PKCE
-                opt.Configure(options =>
+                // PKCE: jen S256
+                opt.Configure(o =>
                 {
-                    options.CodeChallengeMethods.Clear();
-                    options.CodeChallengeMethods.Add(CodeChallengeMethods.Sha256);
+                    o.CodeChallengeMethods.Clear();
+                    o.CodeChallengeMethods.Add(OpenIddictConstants.CodeChallengeMethods.Sha256);
                 });
 
-                var standardScopes = new[]
-                {
-                    Scopes.OpenId, Scopes.Profile, Scopes.Email,
-                    Scopes.Phone, Scopes.Address, Scopes.OfflineAccess
-                };
-                var customScopes = configuration.GetSection("Auth:Scopes").Get<string[]>() ?? Array.Empty<string>();
-                opt.RegisterScopes(standardScopes.Concat(customScopes).ToArray());
+                // Scopes
+                var standard = new[] { Scopes.OpenId, Scopes.Profile, Scopes.Email, Scopes.Phone, Scopes.Address, Scopes.OfflineAccess };
+                var custom = configuration.GetSection("Auth:Scopes").Get<string[]>() ?? Array.Empty<string>();
+                opt.RegisterScopes(standard.Concat(custom).ToArray());
 
+                // Token lifetimes
                 var lifetimes = configuration.GetSection("Auth:TokenLifetimes");
-                var access = lifetimes.GetValue<int?>("AccessMinutes") ?? 60;
-                var identity = lifetimes.GetValue<int?>("IdentityMinutes") ?? 15;
-                var refresh = lifetimes.GetValue<int?>("RefreshDays") ?? 14;
-                opt.SetAccessTokenLifetime(TimeSpan.FromMinutes(access));
-                opt.SetIdentityTokenLifetime(TimeSpan.FromMinutes(identity));
-                opt.SetRefreshTokenLifetime(TimeSpan.FromDays(refresh));
+                opt.SetAccessTokenLifetime(TimeSpan.FromMinutes(lifetimes.GetValue("AccessMinutes", 60)));
+                opt.SetIdentityTokenLifetime(TimeSpan.FromMinutes(lifetimes.GetValue("IdentityMinutes", 15)));
+                opt.SetRefreshTokenLifetime(TimeSpan.FromDays(lifetimes.GetValue("RefreshDays", 14)));
 
-                var signingCerts = LoadCertificates(configuration.GetSection("Auth:Certificates:Signing"));
-                if (signingCerts.Any())
-                {
-                    foreach (var cert in signingCerts)
-                        opt.AddSigningCertificate(cert);
-                }
-                else
-                {
-                    opt.AddDevelopmentSigningCertificate();
-                }
+                // Certy
+                var signing = LoadCertificates(configuration.GetSection("Auth:Certificates:Signing"));
+                if (signing.Any()) foreach (var c in signing) opt.AddSigningCertificate(c); else opt.AddDevelopmentSigningCertificate();
 
-                var encryptionCerts = LoadCertificates(configuration.GetSection("Auth:Certificates:Encryption"));
-                if (encryptionCerts.Any())
-                {
-                    foreach (var cert in encryptionCerts)
-                        opt.AddEncryptionCertificate(cert);
-                }
-                else
-                {
-                    opt.AddDevelopmentEncryptionCertificate();
-                }
+                var encrypt = LoadCertificates(configuration.GetSection("Auth:Certificates:Encryption"));
+                if (encrypt.Any()) foreach (var c in encrypt) opt.AddEncryptionCertificate(c); else opt.AddDevelopmentEncryptionCertificate();
 
+                // Access token format
                 var tokenFormat = configuration["Auth:AccessTokenFormat"] ?? "Jwt";
                 if (string.Equals(tokenFormat, "Reference", StringComparison.OrdinalIgnoreCase))
-                {
                     opt.UseReferenceAccessTokens();
-                }
                 else
-                {
                     opt.DisableAccessTokenEncryption();
-                }
 
-                if (configuration.GetValue<bool?>("AstraId:RequireParForPublicClients") == true)
-                {
+                // PAR vynucení (volitelnì)
+                if (configuration.GetValue<bool>("AstraId:RequireParForPublicClients"))
                     opt.RequirePushedAuthorizationRequests();
-                }
 
+                // ASP.NET Core host + passthroughy
                 opt.UseAspNetCore()
-                    .EnableAuthorizationEndpointPassthrough()
-                    .EnableTokenEndpointPassthrough()
-                    .EnableUserInfoEndpointPassthrough()
-                    .EnableEndSessionEndpointPassthrough()
-                    .EnableRevocationEndpointPassthrough();
+                   .EnableAuthorizationEndpointPassthrough()
+                   .EnableTokenEndpointPassthrough()
+                   .EnableUserInfoEndpointPassthrough();
             })
             .AddValidation(opt =>
             {
@@ -117,17 +92,15 @@ public static class OpenIddictConfig
                 {
                     var cid = configuration["Auth:Introspection:ClientId"] ?? throw new InvalidOperationException("Missing Auth:Introspection:ClientId");
                     var csec = configuration["Auth:Introspection:ClientSecret"] ?? throw new InvalidOperationException("Missing Auth:Introspection:ClientSecret");
-                    opt.UseIntrospection()
-                       .SetClientId(cid)
-                       .SetClientSecret(csec);
+                    opt.UseIntrospection().SetClientId(cid).SetClientSecret(csec);
                 }
                 else
                 {
                     opt.UseLocalServer();
                 }
-
                 opt.UseAspNetCore();
             });
+
 
         return services;
     }

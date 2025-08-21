@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using AstraID.Persistence;
+using Microsoft.AspNetCore.DataProtection;
 
 public class IdentityPoliciesTests
 {

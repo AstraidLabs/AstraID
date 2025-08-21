@@ -18,6 +18,7 @@ using AstraID.Api.Infrastructure.JsoncConfiguration;
 using Microsoft.AspNetCore.HttpOverrides;
 using AstraID.Api.Options;
 using Microsoft.Extensions.Options;
+using CorrelationId.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
