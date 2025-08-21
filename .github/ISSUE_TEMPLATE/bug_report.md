@@ -17,14 +17,14 @@ Steps to reproduce the behavior:
 What you expected to happen.
 
 **Configuration & Environment**
-- OS: 
-- .NET SDK version: 
-- Database engine/version: 
+- OS:
+- .NET SDK version:
+- Database engine/version:
 - Relevant `appsettings.Local.json` or env overrides:
   ```json
   {
-    "ConnectionStrings": { "Default": "CHANGE_ME" }
-    // ...
+    "ConnectionStrings": { "Default": "***" }
+    // other settings
   }
   ```
 - Additional environment variables:
@@ -40,3 +40,5 @@ What you expected to happen.
 
 **Additional context**
 Add any other context about the problem here.
+
+See [Troubleshooting](../../docs/TROUBLESHOOTING.md) for common issues.

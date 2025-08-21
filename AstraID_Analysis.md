@@ -99,3 +99,7 @@ sequenceDiagram
 - **Frameworks:** ASP.NET Core, OpenIddict, Entity Framework Core
 - **Libraries:** MediatR, FluentValidation, Mapster, Serilog, OpenTelemetry (skeleton)
 - **Database:** SQL Server or PostgreSQL via EF Core
+
+---
+
+See also: [Capabilities](AstraID_Capabilities.md) · [Gap Analysis](AstraID_GapAnalysis.md) · [Readiness Report](AstraID_ReadinessChecklist.md)

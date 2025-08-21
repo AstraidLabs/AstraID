@@ -31,3 +31,7 @@
 - ⚠ No explicit correlation-id enrichment in Serilog request logging.
 - ⚠ CORS and rate limiting draw settings from environment variables instead of validated options.
 - ⚠ Rate limiting is global; no special policy for `/connect/*`.
+
+---
+
+Return to [README](README.md)

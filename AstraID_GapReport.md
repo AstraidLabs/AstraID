@@ -17,3 +17,7 @@ Gaps preventing AstraID from being a production‑grade IdP. Priority:
 | Security headers static (no CSP nonce, no host restrictions) | P2 | Middleware sets static CSP string【F:src/AstraID.Api/Extensions/SecurityHeadersMiddleware.cs†L22-L33】 | Use `AddCsp` with dynamic nonce and stricter policies | CSP reported in response with nonce | XSS mitigation incomplete |
 | No MFA/2FA or external federation | P2 | Two‑factor policies exist but no API/UI | Implement TOTP/WebAuthn flows | 2FA challenge required on login | Account takeover risk |
 | Client registration lacks secret hashing & rotation history enforcement | P2 | ClientsController stores secrets directly【F:src/AstraID.Api/Controllers/Admin/ClientsController.cs†L64-L66】 | Hash secrets, enforce rotation policy, track history | Client secret stored hashed with rotation limits | Secret leakage risk |
+
+---
+
+See also: [Gap Analysis](AstraID_GapAnalysis.md) · [Fix Plan](AstraID_FixPlan.md) · [Readiness Report](AstraID_ReadinessChecklist.md)

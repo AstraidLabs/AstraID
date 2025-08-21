@@ -14,3 +14,7 @@
 4. Signing certificates rotate automatically; monitor logs for `Generating new certificate` events.
 5. During grace period JWKS exposes both old and new keys. Clients must refresh JWKS regularly.
 6. If rotation fails, inspect manifest and certificate folders, then manually trigger recycle after fixing.
+
+---
+
+See also: [Security](SECURITY.md) · [Configuration](CONFIGURATION.md)

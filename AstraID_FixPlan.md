@@ -76,3 +76,7 @@ Ordered implementation steps to close gaps.
    ```
 2. **Implement MFA/WebAuthn** – expose endpoints to register authenticators and require TOTP/WebAuthn for sensitive operations.
 3. **Client secret management** – hash secrets on save and store rotation history.
+
+---
+
+See also: [Test Plan](AstraID_TestPlan.md) · [Readiness Report](AstraID_ReadinessChecklist.md) · [Configuration](docs/CONFIGURATION.md)

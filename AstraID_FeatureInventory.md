@@ -13,3 +13,7 @@
 |Health|Liveness and readiness probes|`/health/live` and `/health/ready` endpoints【F:src/AstraID.Api/Health/HealthChecksConfig.cs†L15-L23】|
 |Seeding/Migration|Optional DB migrate and seed via env flags|`ASTRAID_AUTO_MIGRATE`, `ASTRAID_RUN_SEED`【F:src/AstraID.Infrastructure/Startup/WebAppDatabaseExtensions.cs†L22-L54】|
 |Logging|Serilog request logging|Enabled in Program.cs【F:src/AstraID.Api/Program.cs†L37】|
+
+---
+
+Related: [Capabilities](AstraID_Capabilities.md) · [Traceability](AstraID_Traceability.md)
