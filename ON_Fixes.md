@@ -87,3 +87,7 @@ builder.Host.UseSerilog((ctx, cfg) => cfg
 app.UseCorrelationId();
 ```
 **Acceptance test:** Each log entry contains `CorrelationId`; sending `X-Correlation-ID` header is reflected in logs.
+
+---
+
+Return to [README](README.md)

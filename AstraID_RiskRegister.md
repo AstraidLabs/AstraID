@@ -7,4 +7,8 @@
 |Outbox publisher reprocessing on failure|Medium|Medium|Add deduplication/idempotency keys or max-attempts policy|
 |PII in logs|Medium|High|Configure Serilog filters; avoid logging sensitive fields|
 |Weak secret management|Medium|High|Store Data Protection keys in external store; ensure secrets hashed and rotated|
+
+---
+
+See also: [Risks](AstraID_Risks.md) · [Security Notes](docs/SECURITY.md)
 |Insufficient tests|High|High|Establish CI pipeline executing unit/integration/OIDC E2E tests|
