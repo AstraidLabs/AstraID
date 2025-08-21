@@ -13,6 +13,7 @@ using AstraID.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace AstraID.Infrastructure.DependencyInjection;
 
@@ -65,8 +66,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ConsentPolicy>();
 
         // Cross-layer services
-        services.AddSingleton<AstraID.Application.Abstractions.IDateTimeProvider, SystemDateTimeProvider>();
-        services.AddSingleton<AstraID.Domain.Abstractions.IDateTimeProvider, SystemDateTimeProvider>();
+        services.TryAddSingleton<AstraID.Application.Abstractions.IDateTimeProvider, SystemDateTimeProvider>();
+        services.TryAddSingleton<AstraID.Domain.Abstractions.IDateTimeProvider, SystemDateTimeProvider>();
         services.AddScoped<IPasswordPolicy, DefaultPasswordPolicy>();
         services.AddScoped<IPasswordHasher, AspNetPasswordHasher>();
 
