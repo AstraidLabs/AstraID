@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using AstraID.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using OpenIddict.Abstractions;
 using OpenIddict.Server;
 using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation;
 using OpenIddict.Validation.AspNetCore;
+using AstraID.Api.Services;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace AstraID.Api.OpenIddict;
@@ -20,7 +23,7 @@ namespace AstraID.Api.OpenIddict;
 /// </summary>
 public static class OpenIddictConfig
 {
-    public static IServiceCollection AddAstraIdOpenIddict(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAstraIdOpenIddict(this IServiceCollection services, IConfiguration configuration, IHostEnvironment env)
     {
         services.AddOpenIddict()
             .AddCore(opt => opt.UseEntityFrameworkCore().UseDbContext<AstraIdDbContext>())
@@ -43,7 +46,7 @@ public static class OpenIddictConfig
                    .AllowClientCredentialsFlow()
                    .AllowRefreshTokenFlow();
 
-                // PKCE: jen S256
+                // PKCE: only S256
                 opt.Configure(o =>
                 {
                     o.CodeChallengeMethods.Clear();
@@ -61,12 +64,37 @@ public static class OpenIddictConfig
                 opt.SetIdentityTokenLifetime(TimeSpan.FromMinutes(lifetimes.GetValue("IdentityMinutes", 15)));
                 opt.SetRefreshTokenLifetime(TimeSpan.FromDays(lifetimes.GetValue("RefreshDays", 14)));
 
-                // Certy
-                var signing = LoadCertificates(configuration.GetSection("Auth:Certificates:Signing"));
-                if (signing.Any()) foreach (var c in signing) opt.AddSigningCertificate(c); else opt.AddDevelopmentSigningCertificate();
+                // Certificates
+                var certSection = configuration.GetSection("AstraId:Certificates");
+                var signingFolder = certSection.GetValue<string>("SigningFolder");
+                var signingCerts = LoadFromFolder(signingFolder);
+                if (signingCerts.Any())
+                {
+                    foreach (var c in signingCerts) opt.AddSigningCertificate(c);
+                }
+                else if (env.IsDevelopment())
+                {
+                    opt.AddDevelopmentSigningCertificate();
+                }
+                else
+                {
+                    throw new InvalidOperationException("No signing certificates found");
+                }
 
-                var encrypt = LoadCertificates(configuration.GetSection("Auth:Certificates:Encryption"));
-                if (encrypt.Any()) foreach (var c in encrypt) opt.AddEncryptionCertificate(c); else opt.AddDevelopmentEncryptionCertificate();
+                var encryptionFolder = certSection.GetValue<string>("EncryptionFolder");
+                var encryptionCerts = LoadFromFolder(encryptionFolder);
+                if (encryptionCerts.Any())
+                {
+                    foreach (var c in encryptionCerts) opt.AddEncryptionCertificate(c);
+                }
+                else if (env.IsDevelopment())
+                {
+                    opt.AddDevelopmentEncryptionCertificate();
+                }
+                else
+                {
+                    throw new InvalidOperationException("No encryption certificates found");
+                }
 
                 // Access token format
                 var tokenFormat = configuration["Auth:AccessTokenFormat"] ?? "Jwt";
@@ -75,11 +103,11 @@ public static class OpenIddictConfig
                 else
                     opt.DisableAccessTokenEncryption();
 
-                // PAR vynucení (volitelnì)
+                // PAR enforcement optional
                 if (configuration.GetValue<bool>("AstraId:RequireParForPublicClients"))
                     opt.RequirePushedAuthorizationRequests();
 
-                // ASP.NET Core host + passthroughy
+                // ASP.NET Core host + passthroughs
                 opt.UseAspNetCore()
                    .EnableAuthorizationEndpointPassthrough()
                    .EnableTokenEndpointPassthrough()
@@ -101,28 +129,34 @@ public static class OpenIddictConfig
                 opt.UseAspNetCore();
             });
 
-
         return services;
     }
 
-    private static IEnumerable<X509Certificate2> LoadCertificates(IConfigurationSection section)
+    private static IEnumerable<X509Certificate2> LoadFromFolder(string? folder)
     {
         var certs = new List<X509Certificate2>();
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+            return certs;
 
-        foreach (var child in section.GetChildren())
+        var manifestPath = Path.Combine(folder, "manifest.json");
+        if (File.Exists(manifestPath))
         {
-            var path = child["Path"];
-            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-                continue;
-
-            var password = child["Password"];
-            X509Certificate2 cert = string.IsNullOrEmpty(password)
-                ? new X509Certificate2(path)
-                : new X509Certificate2(path, password, X509KeyStorageFlags.MachineKeySet);
-
-            certs.Add(cert);
+            var json = File.ReadAllText(manifestPath);
+            var entries = JsonSerializer.Deserialize<List<KeyManifestEntry>>(json) ?? new();
+            var ordered = entries.Where(e => File.Exists(e.Path))
+                .OrderBy(e => e.Status == KeyStatus.Active ? 1 : 0);
+            foreach (var e in ordered)
+            {
+                certs.Add(new X509Certificate2(e.Path));
+            }
         }
-
+        else
+        {
+            foreach (var file in Directory.GetFiles(folder, "*.pfx").OrderBy(f => f))
+            {
+                certs.Add(new X509Certificate2(file));
+            }
+        }
         return certs;
     }
 }
