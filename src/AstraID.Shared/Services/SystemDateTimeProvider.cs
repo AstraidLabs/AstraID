@@ -1,7 +1,7 @@
 using AstraID.Application.Abstractions;
 using DomainDateTimeProvider = AstraID.Domain.Abstractions.IDateTimeProvider;
 
-namespace AstraID.Infrastructure.Services;
+namespace AstraID.Shared.Services;
 
 /// <summary>Provides the current system time.</summary>
 public sealed class SystemDateTimeProvider : IDateTimeProvider, DomainDateTimeProvider
