@@ -5,15 +5,15 @@
 
 using System.Reflection;
 using AstraID.Domain.Entities;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using AstraID.Persistence.Messaging;
 using AstraID.Persistence.Internal;
-using DataProtectionKey = AstraID.Domain.Entities.DataProtectionKey;
 
 namespace AstraID.Persistence;
 
-public sealed class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>
+public sealed class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>, IDataProtectionKeyContext
 {
     public AstraIdDbContext(DbContextOptions<AstraIdDbContext> options) : base(options)
     {
@@ -29,7 +29,7 @@ public sealed class AstraIdDbContext : IdentityDbContext<AppUser, AppRole, Guid>
     public DbSet<ClientSecretHistory> ClientSecretHistory => Set<ClientSecretHistory>();
     public DbSet<ClientCorsOrigin> ClientCorsOrigins => Set<ClientCorsOrigin>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
-    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
