@@ -17,6 +17,8 @@ using AstraID.Api.Infrastructure.Audit;
 using AstraID.Api.Infrastructure.JsoncConfiguration;
 using Microsoft.AspNetCore.HttpOverrides;
 using AstraID.Api.Options;
+using AstraID.Api.Tls;
+using AstraID.Api.Services;
 using Microsoft.Extensions.Options;
 using CorrelationId.DependencyInjection;
 
@@ -70,9 +72,20 @@ builder.Services.AddOptions<ConnectionStringsOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder.Services.AddOptions<CertificateStoreOptions>()
+    .Bind(config.GetSection("AstraId:Certificates"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddOptions<LetsEncryptOptions>()
+    .Bind(config.GetSection("AstraId:LetsEncrypt"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddSingleton<IValidateOptions<AstraIdOptions>, AstraIdOptionsValidator>();
 builder.Services.AddSingleton<IValidateOptions<AuthOptions>, AuthOptionsValidator>();
 builder.Services.AddSingleton<IValidateOptions<ConnectionStringsOptions>, ConnectionStringsOptionsValidator>();
+builder.Services.AddSingleton<IValidateOptions<LetsEncryptOptions>, LetsEncryptOptionsValidator>();
 
 builder.Services.AddRouting();
 builder.Services.AddCorrelationId();
@@ -107,10 +120,26 @@ builder.Services.Configure<IdentityOptions>(o =>
 });
 
 builder.Services
-    .AddAstraIdOpenIddict(builder.Configuration)
+    .AddAstraIdOpenIddict(builder.Configuration, builder.Environment)
     .AddAstraIdSecurity(builder.Configuration)
     .AddAstraIdProblemDetails()
     .AddAstraIdHealthChecks(builder.Configuration);
+
+builder.Services.AddSingleton<LetsEncryptCertificateLoader>();
+builder.Services.AddHostedService<SigningKeyRotationService>();
+
+builder.WebHost.ConfigureKestrel((context, options) =>
+{
+    var le = context.Configuration.GetSection("AstraId:LetsEncrypt").Get<LetsEncryptOptions>();
+    if (le?.Enabled == true)
+    {
+        options.ConfigureHttpsDefaults(o =>
+        {
+            var loader = options.ApplicationServices.GetRequiredService<LetsEncryptCertificateLoader>();
+            o.ServerCertificateSelector = (ctx, name) => loader.Certificate;
+        });
+    }
+});
 
 builder.Services.AddOpenTelemetry()
     .WithTracing(b => b

@@ -32,4 +32,8 @@
     <ProjectReference Include="..\AstraID.Application\AstraID.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="AstraID.Api.Tests" />
+  </ItemGroup>
+
 </Project>
