@@ -112,6 +112,19 @@ public static class OpenIddictConfig
             })
             .AddValidation(opt =>
             {
+                var mode = configuration.GetValue<string>("Auth:ValidationMode");
+                if (string.Equals(mode, "Introspection", StringComparison.OrdinalIgnoreCase))
+                {
+                    var cid = configuration["Auth:Introspection:ClientId"] ?? throw new InvalidOperationException("Missing Auth:Introspection:ClientId");
+                    var csec = configuration["Auth:Introspection:ClientSecret"] ?? throw new InvalidOperationException("Missing Auth:Introspection:ClientSecret");
+                    opt.UseIntrospection()
+                       .SetClientId(cid)
+                       .SetClientSecret(csec);
+                }
+                else
+                {
+                    opt.UseLocalServer();
+                }
 
                 opt.UseAspNetCore();
             });

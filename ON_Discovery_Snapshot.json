@@ -1,0 +1,4 @@
+{
+  "status": "unavailable",
+  "notes": "Discovery document could not be retrieved; .NET 9 SDK was not installed in the environment, so the server could not be executed."
+}
