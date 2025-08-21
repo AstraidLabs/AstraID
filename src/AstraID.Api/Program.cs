@@ -21,7 +21,7 @@ using AstraID.Api.Tls;
 using AstraID.Api.Services;
 using Microsoft.Extensions.Options;
 using CorrelationId.DependencyInjection;
-using AstraID.Infrastructure.Services;
+using AstraID.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

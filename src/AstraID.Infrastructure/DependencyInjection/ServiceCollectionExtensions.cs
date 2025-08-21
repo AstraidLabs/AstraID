@@ -9,6 +9,7 @@ using AstraID.Infrastructure.Persistence;
 using AstraID.Infrastructure.Persistence.Interceptors;
 using AstraID.Infrastructure.Persistence.Repositories;
 using AstraID.Infrastructure.Services;
+using AstraID.Shared.Services;
 using AstraID.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
