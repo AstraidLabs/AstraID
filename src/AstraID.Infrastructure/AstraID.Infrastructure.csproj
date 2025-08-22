@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\AstraID.Application\AstraID.Application.csproj" />
     <ProjectReference Include="..\AstraID.Persistence\AstraID.Persistence.csproj" />
     <ProjectReference Include="..\AstraID.Domain\AstraID.Domain.csproj" />
     <ProjectReference Include="..\AstraID.Shared\AstraID.Shared.csproj" />

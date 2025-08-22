@@ -21,6 +21,7 @@ using AstraID.Api.Tls;
 using AstraID.Api.Services;
 using Microsoft.Extensions.Options;
 using CorrelationId.DependencyInjection;
+using AstraID.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,6 +90,9 @@ builder.Services.AddSingleton<IValidateOptions<LetsEncryptOptions>, LetsEncryptO
 
 builder.Services.AddRouting();
 builder.Services.AddCorrelationId();
+
+builder.Services.AddSingleton<AstraID.Application.Abstractions.IDateTimeProvider, SystemDateTimeProvider>();
+builder.Services.AddSingleton<AstraID.Domain.Abstractions.IDateTimeProvider, SystemDateTimeProvider>();
 
 builder.Services
     .AddAstraIdApplication()
