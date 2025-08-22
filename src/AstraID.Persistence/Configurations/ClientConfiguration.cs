@@ -46,7 +46,7 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
                 .HasColumnName("Name")
                 .HasMaxLength(128)
                 .HasColumnType("nvarchar(128)");
-            b.HasKey("ClientId", "Name");
+            b.HasKey("ClientId", "Value");
         });
 
         builder.OwnsMany<RedirectUri>("_redirectUris", b =>
@@ -57,7 +57,7 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
                 .HasColumnName("Uri")
                 .HasMaxLength(2048)
                 .HasColumnType("nvarchar(2048)");
-            b.HasKey("ClientId", "Uri");
+            b.HasKey("ClientId", "Value");
         });
 
         builder.OwnsMany<RedirectUri>("_postLogoutRedirectUris", b =>
@@ -68,7 +68,7 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
                 .HasColumnName("Uri")
                 .HasMaxLength(2048)
                 .HasColumnType("nvarchar(2048)");
-            b.HasKey("ClientId", "Uri");
+            b.HasKey("ClientId", "Value");
         });
 
         builder.Navigation("_scopes").UsePropertyAccessMode(PropertyAccessMode.Field);
