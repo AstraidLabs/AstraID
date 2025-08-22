@@ -29,7 +29,7 @@ internal sealed class UserConsentConfiguration : IEntityTypeConfiguration<UserCo
                 .HasColumnName("Name")
                 .HasMaxLength(128)
                 .HasColumnType("nvarchar(128)");
-            b.HasKey("ConsentId", "Name");
+            b.HasKey("ConsentId", nameof(Scope.Value));
         });
 
         builder.Navigation("_scopes").UsePropertyAccessMode(PropertyAccessMode.Field);
