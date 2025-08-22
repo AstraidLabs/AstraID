@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
@@ -16,9 +17,19 @@ public class ConnectionStringsOptionsValidator : IValidateOptions<ConnectionStri
     public ValidateOptionsResult Validate(string? name, ConnectionStringsOptions options)
     {
         var errors = new List<string>();
+        bool HasPlaceholder(string value) =>
+            value.Contains("env:", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("secret:", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("file:", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("${");
+
         if (string.IsNullOrWhiteSpace(options.Default))
         {
-            errors.Add(ValidationError.Format("ConnectionStrings:Default", "must not be empty", "Provide a valid connection string"));
+            errors.Add(ValidationError.Format("ConnectionStrings:Default", "must not be empty", "Edit appsettings.json and set ConnectionStrings:Default"));
+        }
+        else if (HasPlaceholder(options.Default))
+        {
+            errors.Add(ValidationError.Format("ConnectionStrings:Default", "cannot contain placeholders like env:/secret:/file:", "Edit appsettings.json and provide a literal connection string"));
         }
         else
         {
@@ -28,7 +39,7 @@ public class ConnectionStringsOptionsValidator : IValidateOptions<ConnectionStri
             bool hasPassword = builder.ContainsKey("Password") || builder.ContainsKey("PWD");
             if (!(hasIntegrated || (hasUser && hasPassword)))
             {
-                errors.Add(ValidationError.Format("ConnectionStrings:Default", "must include 'Integrated Security=True' or both 'User Id' and 'Password'", "Update connection string credentials"));
+                errors.Add(ValidationError.Format("ConnectionStrings:Default", "must include 'Integrated Security=True' or both 'User Id' and 'Password'", "Edit appsettings.json and update connection string credentials"));
             }
         }
         return errors.Count > 0 ? ValidateOptionsResult.Fail(errors) : ValidateOptionsResult.Success;

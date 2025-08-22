@@ -23,20 +23,22 @@ namespace AstraID.Infrastructure.DependencyInjection;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddAstraIdPersistence(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAstraIdPersistence(this IServiceCollection services)
     {
         services.AddScoped<DomainEventsCollectorInterceptor>();
 
         services.AddDbContext<AstraIdDbContext>((sp, opt) =>
         {
             var interceptor = sp.GetRequiredService<DomainEventsCollectorInterceptor>();
-            var provider = configuration["ASTRAID_DB_PROVIDER"] ?? "SqlServer";
-            var conn = configuration["ASTRAID_DB_CONN"] ?? throw new InvalidOperationException("ASTRAID_DB_CONN is not configured.");
-
-            if (provider.Equals("Postgres", StringComparison.OrdinalIgnoreCase))
-                opt.UseNpgsql(conn);
-            else
-                opt.UseSqlServer(conn);
+            var cfg = sp.GetRequiredService<IConfiguration>();
+            var conn = cfg.GetConnectionString("Default") ?? cfg["ConnectionStrings:Default"];
+            if (string.IsNullOrWhiteSpace(conn))
+                throw new InvalidOperationException("ConnectionStrings:Default is not configured in appsettings*.json.");
+            opt.UseSqlServer(conn, sql =>
+            {
+                sql.MigrationsAssembly(typeof(AstraIdDbContext).Assembly.FullName);
+                sql.EnableRetryOnFailure();
+            });
 
             opt.AddInterceptors(interceptor);
         });

@@ -4,7 +4,7 @@ param(
 
 switch ($Command) {
     "copy" {
-        Copy-Item -Path "src/AstraID.Api/appsettings.Local.json.example" -Destination "src/AstraID.Api/appsettings.Local.json" -ErrorAction SilentlyContinue
+        Copy-Item -Path "src/AstraID.Api/appsettings.Local.example.json" -Destination "src/AstraID.Api/appsettings.Local.json" -ErrorAction SilentlyContinue
         Write-Host "Local config created at src/AstraID.Api/appsettings.Local.json"
     }
     "validate" {

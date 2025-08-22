@@ -33,7 +33,7 @@ This guide walks administrators through installing **AstraID** on Windows, Linux
 1. Copy the sample configuration.
 
    ```bash
-   cp docs/SAMPLES/appsettings.Local.json.example src/AstraID.Api/appsettings.Local.json
+   cp docs/SAMPLES/appsettings.Local.example.json src/AstraID.Api/appsettings.Local.json
    ```
 
 2. Edit `src/AstraID.Api/appsettings.Local.json` to set the connection string and other options.

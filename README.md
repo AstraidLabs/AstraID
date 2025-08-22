@@ -29,7 +29,7 @@ AstraID provides OAuth2 and OpenID Connect services with a config‑first approa
 
 3. **Configure**
    ```bash
-   cp docs/SAMPLES/appsettings.Local.json.example src/AstraID.Api/appsettings.Local.json
+   cp docs/SAMPLES/appsettings.Local.example.json src/AstraID.Api/appsettings.Local.json
    # edit connection string, AllowedCors, issuer and other values
    ```
 
