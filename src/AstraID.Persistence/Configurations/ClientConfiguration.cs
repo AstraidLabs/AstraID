@@ -39,11 +39,12 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
             .HasColumnType("uniqueidentifier");
 
         // EF Core attempts to map the public navigation properties
-        // `RedirectUris` and `PostLogoutRedirectUris` automatically which
-        // causes a model validation error when using the backing field
+        // `Scopes`, `RedirectUris` and `PostLogoutRedirectUris` automatically
+        // which causes a model validation error when using the backing field
         // configuration. Explicitly ignoring the properties avoids the
         // duplicate mapping and lets the owned collection configurations
-        // for `_redirectUris` and `_postLogoutRedirectUris` take effect.
+        // for `_scopes`, `_redirectUris` and `_postLogoutRedirectUris` take effect.
+        builder.Ignore(c => c.Scopes);
         builder.Ignore(c => c.RedirectUris);
         builder.Ignore(c => c.PostLogoutRedirectUris);
 
