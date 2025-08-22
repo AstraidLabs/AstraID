@@ -1,6 +1,6 @@
 {
   "ConnectionStrings": {
-    "Default": "Server=YOUR_HOST\\SQLEXPRESS;Database=AstraID;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;"
+    "Default": "Server=D3S-TVANEK\\SQLEXPRESS;Database=FortifyDB;Integrated Security=True;TrustServerCertificate=True;"
   },
   "AstraId": {
     "Issuer": "https://localhost:5001",
