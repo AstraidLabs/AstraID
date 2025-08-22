@@ -28,6 +28,9 @@ Settings are loaded in the following order (later entries override earlier ones)
 | `AstraId:AutoMigrate` | Apply EF migrations at startup. | `false` |
 | `AstraId:RunSeed` | Seed test data at startup. | `false` |
 | `AstraId:RequireParForPublicClients` | Require Pushed Authorization Requests for public clients. | `false` |
+| `AstraId:Certificates:SigningFolder` | Directory containing signing certificates. | `/path/to/signing` |
+| `AstraId:Certificates:EncryptionFolder` | Directory containing encryption certificates. | `/path/to/encryption` |
+| `AstraId:Certificates:GraceDays` | Days a rotated key remains valid. | `7` |
 
 ## Auth
 
@@ -53,6 +56,8 @@ Use double underscores (`__`) instead of colons (`:`) and indexes for arrays.
 | `ConnectionStrings:Default` | `$env:ConnectionStrings__Default="Server=.\\SQLEXPRESS;Database=AstraID;Integrated Security=True"` | `export ConnectionStrings__Default="Server=.\\SQLEXPRESS;Database=AstraID;Integrated Security=True"` |
 | `AstraId:Issuer` | `$env:AstraId__Issuer="https://id.example.com"` | `export AstraId__Issuer="https://id.example.com"` |
 | `AstraId:AllowedCors[0]` | `$env:AstraId__AllowedCors__0="https://app.example.com"` | `export AstraId__AllowedCors__0="https://app.example.com"` |
+| `AstraId:Certificates:SigningFolder` | `$env:AstraId__Certificates__SigningFolder="/path/to/signing"` | `export AstraId__Certificates__SigningFolder="/path/to/signing"` |
+| `AstraId:Certificates:EncryptionFolder` | `$env:AstraId__Certificates__EncryptionFolder="/path/to/encryption"` | `export AstraId__Certificates__EncryptionFolder="/path/to/encryption"` |
 | `Auth:Introspection:ClientSecret` | `$env:Auth__Introspection__ClientSecret="***"` | `export Auth__Introspection__ClientSecret="***"` |
 
 ## Validation Rules
