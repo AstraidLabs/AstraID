@@ -30,11 +30,33 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<AstraIdDbContext>((sp, opt) =>
         {
             var interceptor = sp.GetRequiredService<DomainEventsCollectorInterceptor>();
-            var provider = configuration["ASTRAID_DB_PROVIDER"] ?? "SqlServer";
-            var conn = configuration["ASTRAID_DB_CONN"] ?? throw new InvalidOperationException("ASTRAID_DB_CONN is not configured.");
+
+            // Allow database configuration via environment variables or standard
+            // connection string settings used in test projects ("ConnectionStrings:Default").
+            var provider = configuration["ASTRAID_DB_PROVIDER"];
+            var conn = configuration["ASTRAID_DB_CONN"]
+                       ?? configuration.GetConnectionString("Default");
+
+            if (string.IsNullOrWhiteSpace(conn))
+                throw new InvalidOperationException(
+                    "Database connection is not configured. Set ASTRAID_DB_CONN or ConnectionStrings:Default.");
+
+            provider = provider?.Trim();
+
+            // If provider not explicitly supplied, attempt to infer from connection string.
+            if (string.IsNullOrWhiteSpace(provider))
+            {
+                if (conn.Contains("DataSource", StringComparison.OrdinalIgnoreCase) ||
+                    conn.Contains("Filename", StringComparison.OrdinalIgnoreCase))
+                    provider = "Sqlite";
+                else
+                    provider = "SqlServer";
+            }
 
             if (provider.Equals("Postgres", StringComparison.OrdinalIgnoreCase))
                 opt.UseNpgsql(conn);
+            else if (provider.Equals("Sqlite", StringComparison.OrdinalIgnoreCase))
+                opt.UseSqlite(conn);
             else
                 opt.UseSqlServer(conn);
 

@@ -10,10 +10,29 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<AstraIdDbContext>(opt =>
         {
-            var provider = cfg["ASTRAID_DB_PROVIDER"]?.ToLowerInvariant() ?? "sqlserver";
-            var conn = cfg["ASTRAID_DB_CONN"] ?? throw new InvalidOperationException("ASTRAID_DB_CONN missing.");
+            var provider = cfg["ASTRAID_DB_PROVIDER"];
+            var conn = cfg["ASTRAID_DB_CONN"]
+                       ?? cfg.GetConnectionString("Default");
+
+            if (string.IsNullOrWhiteSpace(conn))
+                throw new InvalidOperationException(
+                    "Database connection is not configured. Set ASTRAID_DB_CONN or ConnectionStrings:Default.");
+
+            provider = provider?.Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(provider))
+            {
+                if (conn.Contains("datasource", StringComparison.OrdinalIgnoreCase) ||
+                    conn.Contains("filename", StringComparison.OrdinalIgnoreCase))
+                    provider = "sqlite";
+                else
+                    provider = "sqlserver";
+            }
+
             if (provider == "postgres")
                 opt.UseNpgsql(conn);
+            else if (provider == "sqlite")
+                opt.UseSqlite(conn);
             else
                 opt.UseSqlServer(conn);
         });
