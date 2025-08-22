@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-TEMPLATE="src/AstraID.Api/appsettings.Local.json.example"
+TEMPLATE="src/AstraID.Api/appsettings.Local.example.json"
 TARGET="src/AstraID.Api/appsettings.Local.json"
 if [ -f "$TARGET" ]; then
   echo "$TARGET already exists" >&2

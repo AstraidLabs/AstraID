@@ -361,11 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-# Local secrets
+# do not commit local secrets
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json
 appsettings.Local.json
-appsettings.Local.jsonc
-
-
-# Local configuration override
-src/AstraID.Api/appsettings.Local.json
+appsettings.*.jsonc
+!appsettings.*.example.jsonc
 

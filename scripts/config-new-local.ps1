@@ -1,4 +1,4 @@
-$Template = "src/AstraID.Api/appsettings.Local.json.example"
+$Template = "src/AstraID.Api/appsettings.Local.example.json"
 $Target = "src/AstraID.Api/appsettings.Local.json"
 if (Test-Path $Target) {
     Write-Error "$Target already exists"

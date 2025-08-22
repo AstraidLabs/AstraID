@@ -22,36 +22,22 @@ using AstraID.Api.Services;
 using Microsoft.Extensions.Options;
 using CorrelationId.DependencyInjection;
 using AstraID.Shared.Services;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var preConfig = new ConfigurationBuilder()
-    .AddEnvironmentVariables()
-    .AddJsonFile("appsettings.json", optional: true)
-    .Build();
-var useJsonc = preConfig.GetValue<bool>("UseJsonc");
-
+// FILES ONLY
 builder.Configuration.Sources.Clear();
-builder.Configuration.SetBasePath(builder.Environment.ContentRootPath);
-if (useJsonc)
-{
-    builder.Configuration
-        .AddJsoncFile("appsettings.jsonc", optional: true, reloadOnChange: true)
-        .AddJsoncFile($"appsettings.{builder.Environment.EnvironmentName}.jsonc", optional: true, reloadOnChange: true)
-        .AddJsoncFile("appsettings.Local.jsonc", optional: true, reloadOnChange: true);
-}
-
 builder.Configuration
+    .SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
+    .AddJsoncFile("appsettings.jsonc", optional: true, reloadOnChange: true)
+    .AddJsoncFile($"appsettings.{builder.Environment.EnvironmentName}.jsonc", optional: true, reloadOnChange: true)
+    .AddJsoncFile("appsettings.Local.jsonc", optional: true, reloadOnChange: true);
 
 var config = builder.Configuration;
-
-#if DEBUG
-builder.Configuration.AddUserSecrets<Program>(optional: true);
-#endif
 
 builder.Host.UseSerilog((ctx, cfg) => cfg
     .ReadFrom.Configuration(ctx.Configuration)
@@ -96,7 +82,7 @@ builder.Services.AddSingleton<AstraID.Domain.Abstractions.IDateTimeProvider, Sys
 
 builder.Services
     .AddAstraIdApplication()
-    .AddAstraIdPersistence(builder.Configuration);
+    .AddAstraIdPersistence();
 
 // Data Protection keys persisted in DB (for multi-instance and stable cookies)
 builder.Services.AddDataProtection()
@@ -247,14 +233,25 @@ if (app.Environment.IsDevelopment())
         foreach (var kvp in configuration.AsEnumerable())
         {
             if (string.IsNullOrEmpty(kvp.Value)) continue;
-            var provider = root.Providers.First(p => p.TryGet(kvp.Key, out _));
+            var provider = root.Providers.First(p => p.TryGet(kvp.Key, out _)) as FileConfigurationProvider;
+            var source = provider?.Source.Path ?? "unknown";
             var shouldMask = kvp.Key.Contains("Password", StringComparison.OrdinalIgnoreCase) ||
                              kvp.Key.Contains("Secret", StringComparison.OrdinalIgnoreCase) ||
                              kvp.Key.Equals("ConnectionStrings:Default", StringComparison.OrdinalIgnoreCase);
             var value = shouldMask ? Mask(kvp.Value) : kvp.Value;
-            snapshot[kvp.Key] = new { value, source = provider.ToString() };
+            snapshot[kvp.Key] = new { value, source };
         }
         return Results.Json(snapshot);
+    });
+
+    app.MapGet("/_diag/config/where", (IConfiguration configuration) =>
+    {
+        var root = (IConfigurationRoot)configuration;
+        var sources = root.Providers
+            .OfType<FileConfigurationProvider>()
+            .Select(p => p.Source.Path)
+            .ToArray();
+        return Results.Json(sources);
     });
 
     app.MapGet("/_diag/config/validate", (IServiceProvider sp) =>

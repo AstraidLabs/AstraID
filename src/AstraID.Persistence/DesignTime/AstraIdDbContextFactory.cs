@@ -12,18 +12,17 @@ internal sealed class AstraIdDbContextFactory : IDesignTimeDbContextFactory<Astr
     {
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true)
-            .AddEnvironmentVariables()
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
+            .AddJsonFile("appsettings.Local.json", optional: true)
             .Build();
 
-        var provider = configuration["ASTRAID_DB_PROVIDER"]?.ToLowerInvariant() ?? "sqlserver";
-        var conn = configuration["ASTRAID_DB_CONN"] ?? throw new InvalidOperationException("ASTRAID_DB_CONN missing.");
+        var conn = configuration.GetConnectionString("Default") ?? configuration["ConnectionStrings:Default"];
+        if (string.IsNullOrWhiteSpace(conn))
+            throw new InvalidOperationException("ConnectionStrings:Default is not configured in appsettings*.json.");
 
         var options = new DbContextOptionsBuilder<AstraIdDbContext>();
-        if (provider == "postgres")
-            options.UseNpgsql(conn);
-        else
-            options.UseSqlServer(conn);
+        options.UseSqlServer(conn);
 
         return new AstraIdDbContext(options.Options);
     }

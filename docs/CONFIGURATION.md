@@ -1,6 +1,6 @@
 # Configuration Reference
 
-AstraID uses a **config-first** model. All settings are defined in configuration files or environment variables.
+AstraID reads configuration **only** from `appsettings*.json` or `appsettings*.jsonc` files. Environment variables and user secrets are ignored.
 
 ## Load Order
 
@@ -8,8 +8,14 @@ Settings are loaded in the following order (later entries override earlier ones)
 
 1. `appsettings.json`
 2. `appsettings.{Environment}.json`
-3. `appsettings.Local.json` (not committed)
-4. Environment variables
+3. `appsettings.Local.json` (optional, not committed)
+
+## Local Development
+
+1. Copy `src/AstraID.Api/appsettings.Local.example.json` to `src/AstraID.Api/appsettings.json`.
+2. Edit the new file and provide real connection strings, URLs and secrets.
+
+For production deployments, start from `src/AstraID.Api/appsettings.Production.example.json` and protect the resulting files and backups.
 
 ## ConnectionStrings
 
@@ -44,17 +50,6 @@ Settings are loaded in the following order (later entries override earlier ones)
 | `Auth:Introspection:ClientId` | Required when `ValidationMode=Introspection`. | `admin-cli` |
 | `Auth:Introspection:ClientSecret` | Secret for introspection client. | `***` |
 
-## Environment Variable Overrides
-
-Use double underscores (`__`) instead of colons (`:`) and indexes for arrays.
-
-| Setting | Windows PowerShell | Linux/macOS |
-|---------|-------------------|-------------|
-| `ConnectionStrings:Default` | `$env:ConnectionStrings__Default="Server=.\\SQLEXPRESS;Database=AstraID;Integrated Security=True"` | `export ConnectionStrings__Default="Server=.\\SQLEXPRESS;Database=AstraID;Integrated Security=True"` |
-| `AstraId:Issuer` | `$env:AstraId__Issuer="https://id.example.com"` | `export AstraId__Issuer="https://id.example.com"` |
-| `AstraId:AllowedCors[0]` | `$env:AstraId__AllowedCors__0="https://app.example.com"` | `export AstraId__AllowedCors__0="https://app.example.com"` |
-| `Auth:Introspection:ClientSecret` | `$env:Auth__Introspection__ClientSecret="***"` | `export Auth__Introspection__ClientSecret="***"` |
-
 ## Validation Rules
 
 AstraID validates configuration on startup and fails fast if rules are violated:
@@ -65,10 +60,10 @@ AstraID validates configuration on startup and fails fast if rules are violated:
 - `Auth:Certificates` paths must exist unless `UseDevelopmentCertificates=true`.
 - `ConnectionStrings:Default` must include credentials or `Integrated Security=True`.
 
-Store secrets (connection strings, client secrets, certificate passwords) in a secure vault or environment variables; never commit them to source control.
+Configuration files may contain secrets. Keep them out of source control and protect the files and their backups.
 
 ---
 
 See also: [Installation](INSTALL.md) · [Security](SECURITY.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
-Edit [`docs/SAMPLES/appsettings.Local.json.example`](SAMPLES/appsettings.Local.json.example) for a full template.
+Edit [`docs/SAMPLES/appsettings.Local.example.json`](SAMPLES/appsettings.Local.example.json) for a full template.
