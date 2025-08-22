@@ -21,7 +21,7 @@ internal sealed class UserConsentConfiguration : IEntityTypeConfiguration<UserCo
 
         builder.HasIndex(c => new { c.UserId, c.ClientId });
 
-        builder.OwnsMany<Scope>("_scopes", b =>
+        builder.OwnsMany(c => c.Scopes, b =>
         {
             b.ToTable("UserConsentScopes");
             b.WithOwner().HasForeignKey("ConsentId");
@@ -32,6 +32,6 @@ internal sealed class UserConsentConfiguration : IEntityTypeConfiguration<UserCo
             b.HasKey("ConsentId", nameof(Scope.Value));
         });
 
-        builder.Navigation("_scopes").UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(c => c.Scopes).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
