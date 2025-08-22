@@ -48,6 +48,20 @@ AstraID provides OAuth2 and OpenID Connect services with a config‑first approa
    - Browse to `https://localhost:5001/.well-known/openid-configuration`
    - Check health at `https://localhost:5001/health/ready`
 
+## How to run tests
+
+1. Ensure the .NET 9 SDK is installed.
+2. Restore and build the solution:
+   ```bash
+   dotnet restore
+   dotnet build
+   ```
+3. Run all tests with coverage:
+   ```bash
+   dotnet test --collect:"XPlat Code Coverage"
+   ```
+   A local SQL Server instance is required only for tests that need it; the default configuration uses in-memory databases.
+
 ## Documentation
 - [Installation Guide](docs/INSTALL.md)
 - [Configuration Reference](docs/CONFIGURATION.md)

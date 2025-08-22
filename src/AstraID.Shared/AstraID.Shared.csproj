@@ -8,5 +8,7 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\AstraID.Application\AstraID.Application.csproj" />
+    <ProjectReference Include="..\AstraID.Domain\AstraID.Domain.csproj" />
   </ItemGroup>
 </Project>
