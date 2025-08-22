@@ -7,7 +7,12 @@
     "AllowedCors": [ "https://localhost:5173" ],
     "RateLimit": { "Rps": 10, "Burst": 20 },
     "AutoMigrate": false,
-    "RunSeed": false
+    "RunSeed": false,
+    "Certificates": {
+      "SigningFolder": "/path/to/signing",
+      "EncryptionFolder": "/path/to/encryption",
+      "GraceDays": 7
+    }
   },
   "Auth": {
     "ValidationMode": "Jwt",

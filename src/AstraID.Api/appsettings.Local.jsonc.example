@@ -20,7 +20,14 @@
 
     // Enable only for DEV/TEST
     "AutoMigrate": false,
-    "RunSeed": false
+    "RunSeed": false,
+
+    // Paths for automatic certificate rotation
+    "Certificates": {
+      "SigningFolder": "/path/to/signing",
+      "EncryptionFolder": "/path/to/encryption",
+      "GraceDays": 7
+    }
   },
 
   // === Tokens & Certificates ===
